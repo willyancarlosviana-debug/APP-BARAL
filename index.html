@@ -1,2910 +1,401 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Samaúma - Gestão Operacional & Financeira</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        samauma: {
-                            50: '#f2f7f3',
-                            100: '#e1ede3',
-                            200: '#c5dac9',
-                            300: '#9cbdc3',
-                            400: '#759b7d',
-                            500: '#537d5c',
-                            600: '#3e6246',
-                            700: '#325039',
-                            800: '#263f2d',
-                            900: '#1d3224',
-                            950: '#0e1b12',
-                            accent: '#d9a05b',
-                            clay: '#8c5c32',
-                            gold: '#df9c3c',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome v6 Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f3f4f6;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Balneário Samaúma - Gestão Nuvem</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-samauma-50 font-sans text-slate-800 min-h-screen flex flex-col custom-scrollbar">
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-16">
 
-    <!-- HEADER / NAVIGATION -->
-    <header class="bg-samauma-950 text-white shadow-md sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center py-3 md:py-4 gap-4">
-                <!-- Brand Logo & Title -->
-                <div class="flex items-center gap-3">
-                    <div class="bg-samauma-700 p-2.5 rounded-full flex items-center justify-center border border-samauma-500 shadow-inner">
-                        <i class="fa-solid fa-tree text-2xl text-samauma-accent animate-pulse"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold tracking-wider text-samauma-100 flex items-center gap-2">
-                            BALNEÁRIO SAMAÚMA
-                        </h1>
-                        <p class="text-xs text-samauma-300">Gestão Operacional & Financeira Integrada</p>
-                    </div>
-                </div>
+  <!-- Topo -->
+  <header class="bg-indigo-950 text-white p-4 shadow-md sticky top-0 z-30 border-b border-indigo-800">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-bold tracking-wide flex items-center gap-2">
+          <i class="fa-solid fa-tree text-indigo-400"></i> Balneário Samaúma
+        </h1>
+        <p class="text-xs text-indigo-300">Sincronizado em Tempo Real (Nuvem)</p>
+      </div>
+      <div id="status-conexao" class="text-xs bg-indigo-900 px-3 py-1 rounded-full flex items-center gap-1 border border-indigo-700 text-indigo-200">
+        <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span> Online
+      </div>
+    </div>
+  </header>
 
-                <!-- Status Badge and Quick Info -->
-                <div class="flex items-center gap-3 text-xs md:text-sm">
-                    <span class="bg-samauma-900 border border-samauma-700 text-samauma-200 px-3 py-1 rounded-full flex items-center gap-2 font-medium">
-                        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
-                        Modo Offline / Local
-                    </span>
-                    <span id="header-date" class="text-samauma-300 hidden sm:inline"></span>
-                </div>
-            </div>
-            
-            <!-- Tab Buttons Navigation -->
-            <nav class="flex overflow-x-auto border-t border-samauma-800 custom-scrollbar scroll-smooth">
-                <button id="btn-dashboard" onclick="switchTab('dashboard')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-chart-line text-lg"></i> Dashboard
-                </button>
-                <button id="btn-vendas" onclick="switchTab('vendas')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-cash-register text-lg"></i> Vendas / PDV
-                </button>
-                <button id="btn-estoque" onclick="switchTab('estoque')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-boxes-stacked text-lg"></i> Estoque
-                </button>
-                <button id="btn-financeiro" onclick="switchTab('financeiro')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-money-bill-transfer text-lg"></i> Financeiro
-                </button>
-                <button id="btn-config" onclick="switchTab('config')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-sliders text-lg"></i> Configurações
-                </button>
-            </nav>
-        </div>
-    </header>
+  <!-- Navegação por Abas -->
+  <nav class="bg-indigo-900 text-white shadow">
+    <div class="max-w-4xl mx-auto flex justify-around text-center text-sm font-medium">
+      <button onclick="trocarAba('pdv')" id="tab-pdv" class="py-3 px-2 flex-1 border-b-4 border-blue-400 font-bold bg-indigo-950/80">
+        <i class="fa-solid fa-cash-register block text-lg mb-1 text-blue-400"></i>Vendas
+      </button>
+      <button onclick="trocarAba('estoque')" id="tab-estoque" class="py-3 px-2 flex-1 border-b-4 border-transparent text-indigo-200 hover:text-white">
+        <i class="fa-solid fa-boxes-stacked block text-lg mb-1"></i>Estoque
+      </button>
+      <button onclick="trocarAba('financeiro')" id="tab-financeiro" class="py-3 px-2 flex-1 border-b-4 border-transparent text-indigo-200 hover:text-white">
+        <i class="fa-solid fa-chart-line block text-lg mb-1"></i>Balanço
+      </button>
+    </div>
+  </nav>
 
-    <!-- MAIN CONTAINER -->
-    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow">
+  <!-- Conteúdo Principal -->
+  <main class="max-w-4xl mx-auto p-4 space-y-4">
+
+    <!-- ABA 1: VENDAS / PDV -->
+    <section id="aba-pdv" class="space-y-4">
+      <div class="bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-700">
+        <h2 class="font-bold text-lg text-indigo-300 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-cart-plus text-blue-400"></i> Registrar Venda
+        </h2>
         
-        <!-- ==================== TABS CONTENT ==================== -->
-
-        <!-- 1. TAB: DASHBOARD -->
-        <section id="tab-dashboard" class="tab-content hidden space-y-6">
-            <!-- Filter and Actions -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-square-poll-vertical text-samauma-600"></i>
-                        Indicadores de Desempenho
-                    </h2>
-                    <p class="text-xs text-slate-500">Acompanhamento financeiro em tempo real</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    <!-- Period Selection -->
-                    <div class="inline-flex rounded-lg bg-slate-100 p-0.5" id="dashboard-period-filters">
-                        <button onclick="changeDashboardPeriod('hoje')" id="filter-hoje" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-md transition-all">Hoje</button>
-                        <button onclick="changeDashboardPeriod('semana')" id="filter-semana" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-md transition-all">Esta Semana</button>
-                        <button onclick="changeDashboardPeriod('mes')" id="filter-mes" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-md transition-all">Este Mês</button>
-                        <button onclick="changeDashboardPeriod('custom')" id="filter-custom" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-md transition-all">Personalizado</button>
-                    </div>
-                    <!-- Custom Date Picker Fields (hidden by default) -->
-                    <div id="custom-date-container" class="hidden flex items-center gap-2 mt-2 sm:mt-0">
-                        <input type="date" id="dash-start-date" onchange="applyCustomDates()" class="px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                        <span class="text-xs text-slate-400">até</span>
-                        <input type="date" id="dash-end-date" onchange="applyCustomDates()" class="px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Balanço Financeiro Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Entradas Card -->
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-emerald-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300">
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Faturamento (Entradas)</p>
-                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-entradas">R$ 0,00</h3>
-                        <span class="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
-                            <i class="fa-solid fa-circle-arrow-up"></i> Vendas Concluídas
-                        </span>
-                    </div>
-                    <div class="bg-emerald-50 text-emerald-600 p-3.5 rounded-xl">
-                        <i class="fa-solid fa-circle-dollar-to-slot text-2xl"></i>
-                    </div>
-                </div>
-
-                <!-- Saídas/Custos Card -->
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300">
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Saídas & Despesas</p>
-                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-saidas">R$ 0,00</h3>
-                        <span class="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
-                            <i class="fa-solid fa-circle-arrow-down"></i> Custos Pagos
-                        </span>
-                    </div>
-                    <div class="bg-red-50 text-red-600 p-3.5 rounded-xl">
-                        <i class="fa-solid fa-receipt text-2xl"></i>
-                    </div>
-                </div>
-
-                <!-- Saldo Líquido Card -->
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-cyan-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300">
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Saldo em Caixa</p>
-                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-saldo">R$ 0,00</h3>
-                        <span class="text-[10px] text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
-                            <i class="fa-solid fa-scale-balanced"></i> Entradas - Saídas
-                        </span>
-                    </div>
-                    <div class="bg-cyan-50 text-cyan-600 p-3.5 rounded-xl">
-                        <i class="fa-solid fa-wallet text-2xl"></i>
-                    </div>
-                </div>
-
-                <!-- Lucro Estimado Card -->
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-samauma-accent p-4 flex justify-between items-center hover:shadow-md transition-all duration-300 group">
-                    <div>
-                        <div class="flex items-center gap-1.5">
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Lucro Operacional</p>
-                            <span class="text-slate-400 hover:text-slate-600 cursor-pointer text-xs" title="Faturamento total menos o custo dos produtos vendidos (CMV) e as despesas operacionais periódicas (exclui compras de reposição de estoque para evitar duplicidade).">
-                                <i class="fa-solid fa-circle-info"></i>
-                            </span>
-                        </div>
-                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-lucro">R$ 0,00</h3>
-                        <span id="dash-lucro-badge" class="text-[10px] text-samauma-800 bg-samauma-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
-                            Lucratividade: 0%
-                        </span>
-                    </div>
-                    <div class="bg-samauma-100 text-samauma-700 p-3.5 rounded-xl group-hover:bg-samauma-200 transition-colors">
-                        <i class="fa-solid fa-hand-holding-dollar text-2xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alertas de Estoque Baixo (Se houver) -->
-            <div id="dashboard-stock-alerts" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg mt-0.5"></i>
-                <div class="w-full">
-                    <h4 class="text-sm font-bold text-amber-800">Alerta de Estoque Crítico!</h4>
-                    <p class="text-xs text-amber-700 mt-0.5">Os seguintes produtos estão abaixo do limite mínimo recomendado:</p>
-                    <div id="dashboard-stock-alerts-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                        <!-- Renderizado dinamicamente -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráficos e Tabelas -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Gráfico de Fluxo de Caixa -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 lg:col-span-2">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-area text-samauma-500"></i> Fluxo de Caixa Recente (Últimos 10 Dias)
-                    </h3>
-                    <div class="h-64 relative">
-                        <canvas id="canvas-cashflow"></canvas>
-                    </div>
-                </div>
-
-                <!-- Gráfico de Produtos Mais Vendidos -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-ranking-star text-samauma-accent"></i> Itens Mais Vendidos
-                    </h3>
-                    <div class="h-64 relative">
-                        <canvas id="canvas-top-products"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Resumos de Atividades e Resumos Extras -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Contas a Pagar / Pendentes Recentes -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                            <i class="fa-solid fa-clock text-rose-500"></i> Contas a Pagar Pendentes
-                        </h3>
-                        <button onclick="switchTab('financeiro')" class="text-xs text-samauma-600 hover:text-samauma-800 font-semibold">Ver todas</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-xs text-left text-slate-600">
-                            <thead class="bg-slate-50 text-slate-500 uppercase text-[10px]">
-                                <tr>
-                                    <th class="py-2 px-3">Vencimento</th>
-                                    <th class="py-2 px-3">Descrição</th>
-                                    <th class="py-2 px-3 text-right">Valor</th>
-                                    <th class="py-2 px-3 text-center">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dash-pending-expenses-body">
-                                <!-- Preenchido dinamicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Vendas Recentes -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                            <i class="fa-solid fa-clock-rotate-left text-emerald-500"></i> Últimas Vendas Fechadas
-                        </h3>
-                        <button onclick="switchTab('vendas')" class="text-xs text-samauma-600 hover:text-samauma-800 font-semibold">Novo Pedido</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-xs text-left text-slate-600">
-                            <thead class="bg-slate-50 text-slate-500 uppercase text-[10px]">
-                                <tr>
-                                    <th class="py-2 px-3">Hora</th>
-                                    <th class="py-2 px-3">Cliente / Mesa</th>
-                                    <th class="py-2 px-3 text-center">Pagamento</th>
-                                    <th class="py-2 px-3 text-right">Valor</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dash-recent-sales-body">
-                                <!-- Preenchido dinamicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 2. TAB: VENDAS / PDV -->
-        <section id="tab-vendas" class="tab-content hidden">
-            <!-- 2.1 VIEW: COMANDAS GRID -->
-            <div id="vendas-grid-view" class="space-y-6">
-                <!-- Bar de Ações -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-utensils text-samauma-600"></i>
-                            Mesas & Comandas
-                        </h2>
-                        <p class="text-xs text-slate-500">Gerenciamento de atendimentos ativos no balneário</p>
-                    </div>
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <div class="relative flex-grow sm:flex-grow-0">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                            </span>
-                            <input type="text" id="comanda-search" oninput="renderVendas()" placeholder="Buscar mesa/comanda..." class="w-full sm:w-60 pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                        </div>
-                        <button onclick="openModal('modal-abrir-comanda')" class="bg-samauma-700 hover:bg-samauma-800 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm whitespace-nowrap">
-                            <i class="fa-solid fa-plus"></i> Abrir Atendimento
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Grid de Mesas/Comandas Abertas -->
-                <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Atendimentos em Aberto</h3>
-                    <div id="comandas-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        <!-- Renderizado dinamicamente -->
-                    </div>
-                    <div id="empty-comandas-state" class="hidden bg-white rounded-xl border border-dashed border-slate-200 p-8 text-center">
-                        <i class="fa-solid fa-store-slash text-4xl text-slate-300 mb-3"></i>
-                        <p class="text-sm font-semibold text-slate-500">Nenhum atendimento aberto no momento</p>
-                        <button onclick="openModal('modal-abrir-comanda')" class="mt-3 text-xs text-samauma-600 hover:text-samauma-800 font-bold underline">Abrir a primeira comanda</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2.2 VIEW: POS CAIXA (ACTIVE ORDER SCREEN) -->
-            <div id="vendas-pos-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Detalhes do Pedido & Carrinho (Left Panel) -->
-                <div class="lg:col-span-5 bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col min-h-[500px]">
-                    <!-- Top Order Metadata -->
-                    <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
-                        <div>
-                            <span class="bg-samauma-100 text-samauma-800 text-[10px] font-bold px-2 py-0.5 rounded-full" id="pos-client-type">Mesa</span>
-                            <h2 class="text-lg font-black text-slate-800 mt-0.5" id="pos-client-name">Mesa 01</h2>
-                            <p class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
-                                <i class="fa-regular fa-clock"></i> Aberta às <span id="pos-open-time">--:--</span>
-                            </p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="exitPOS()" class="text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-2 rounded-lg transition-colors" title="Salvar e Voltar">
-                                <i class="fa-solid fa-arrow-left"></i>
-                            </button>
-                            <button onclick="cancelActiveOrder()" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Cancelar Comanda">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Cart Items List -->
-                    <div class="flex-grow overflow-y-auto max-h-[320px] py-4 custom-scrollbar" id="pos-cart-container">
-                        <!-- Renderizado dinamicamente -->
-                    </div>
-
-                    <!-- Totals and Action Buttons -->
-                    <div class="border-t border-slate-100 pt-4 mt-auto space-y-4">
-                        <div class="flex justify-between items-center font-bold text-slate-700 text-sm">
-                            <span>Subtotal:</span>
-                            <span id="pos-subtotal">R$ 0,00</span>
-                        </div>
-                        <div class="flex justify-between items-center font-black text-slate-800 text-lg border-t border-dashed border-slate-100 pt-2">
-                            <span>Total Geral:</span>
-                            <span id="pos-total" class="text-samauma-700">R$ 0,00</span>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="exitPOS()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg text-xs transition-colors flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-save"></i> Manter Aberta
-                            </button>
-                            <button onclick="openPaymentModal()" class="w-full bg-samauma-700 hover:bg-samauma-800 text-white font-bold py-2.5 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
-                                <i class="fa-solid fa-wallet"></i> Fechar & Receber
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Menu de Produtos (Right Panel) -->
-                <div class="lg:col-span-7 space-y-4 flex flex-col">
-                    <!-- Search and Categories -->
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-3">
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                            </span>
-                            <input type="text" id="pos-menu-search" oninput="renderPOSMenu()" placeholder="Buscar produto por nome..." class="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                        </div>
-                        
-                        <!-- Categories Filter Tabs -->
-                        <div class="flex gap-1.5 overflow-x-auto pb-1 custom-scrollbar" id="pos-menu-categories">
-                            <!-- Preenchido dinamicamente -->
-                        </div>
-                    </div>
-
-                    <!-- Products Grid -->
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[480px] custom-scrollbar" id="pos-menu-products">
-                        <!-- Renderizado dinamicamente -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 3. TAB: ESTOQUE -->
-        <section id="tab-estoque" class="tab-content hidden space-y-6">
-            <!-- Estoque Control Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-boxes-stacked text-samauma-600"></i>
-                        Controle de Estoque & Insumos
-                    </h2>
-                    <p class="text-xs text-slate-500">Gerenciamento de materiais, compras e desperdícios</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    <button onclick="openModal('modal-novo-produto')" class="bg-samauma-700 hover:bg-samauma-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm">
-                        <i class="fa-solid fa-plus"></i> Novo Produto
-                    </button>
-                    <button onclick="openModal('modal-entrada-estoque')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors">
-                        <i class="fa-solid fa-truck-loading text-samauma-600"></i> Compras / Entrada
-                    </button>
-                    <button onclick="openModal('modal-perda-estoque')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors">
-                        <i class="fa-solid fa-circle-minus"></i> Perda / Descarte
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tabela e Filtros de Produtos -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                <div class="flex flex-col sm:flex-row gap-2 justify-between items-center">
-                    <!-- Buscas e Filtro de Categorias -->
-                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-grow max-w-xl">
-                        <div class="relative flex-grow">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                            </span>
-                            <input type="text" id="estoque-search" oninput="renderEstoque()" placeholder="Buscar produto..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                        </div>
-                        <select id="estoque-filter-category" onchange="renderEstoque()" class="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none w-full sm:w-40 text-slate-600">
-                            <option value="">Todas Categorias</option>
-                            <option value="Bebidas">Bebidas</option>
-                            <option value="Alimentos">Alimentos</option>
-                            <option value="Porções">Porções</option>
-                            <option value="Insumos Gerais">Insumos Gerais</option>
-                            <option value="Outros">Outros</option>
-                        </select>
-                    </div>
-                    <!-- Status Filter -->
-                    <select id="estoque-filter-status" onchange="renderEstoque()" class="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none w-full sm:w-40 text-slate-600">
-                        <option value="">Todos Status</option>
-                        <option value="normal">Estoque Normal</option>
-                        <option value="baixo">Estoque Baixo</option>
-                        <option value="esgotado">Esgotado</option>
-                    </select>
-                </div>
-
-                <!-- Products Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-slate-600">
-                        <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-100">
-                            <tr>
-                                <th class="py-3 px-4">Produto</th>
-                                <th class="py-3 px-4">Categoria</th>
-                                <th class="py-3 px-4 text-center">Und. Medida</th>
-                                <th class="py-3 px-4 text-right">Preço Custo</th>
-                                <th class="py-3 px-4 text-right">Preço Venda</th>
-                                <th class="py-3 px-4 text-center">Qtd Atual</th>
-                                <th class="py-3 px-4 text-center">Qtd Mínima</th>
-                                <th class="py-3 px-4 text-center">Status</th>
-                                <th class="py-3 px-4 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="estoque-table-body" class="divide-y divide-slate-100">
-                            <!-- Renderizado dinamicamente -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Empty State -->
-                <div id="empty-estoque-state" class="hidden py-8 text-center">
-                    <i class="fa-solid fa-boxes-packing text-4xl text-slate-300 mb-3"></i>
-                    <p class="text-sm font-semibold text-slate-500">Nenhum produto cadastrado que atenda aos filtros</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 4. TAB: FINANCEIRO / CUSTOS -->
-        <section id="tab-financeiro" class="tab-content hidden space-y-6">
-            <!-- Finance Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-money-bill-transfer text-samauma-600"></i>
-                        Fluxo de Caixa & Contas
-                    </h2>
-                    <p class="text-xs text-slate-500">Lançamento de despesas, receitas e fluxo de caixa linear</p>
-                </div>
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <button onclick="openModal('modal-nova-despesa')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm whitespace-nowrap">
-                        <i class="fa-solid fa-plus"></i> Registrar Despesa (Saída)
-                    </button>
-                </div>
-            </div>
-
-            <!-- Abas do Financeiro: [Controle de Contas] | [Livro Caixa (Extrato)] -->
-            <div class="space-y-4">
-                <div class="border-b border-slate-200">
-                    <ul class="flex -mb-px text-sm font-medium text-center text-slate-500">
-                        <li class="mr-2">
-                            <button onclick="switchFinanceSubTab('contas')" id="fin-tab-contas" class="inline-flex items-center gap-2 p-3 border-b-2 font-bold transition-all text-samauma-800 border-samauma-700">
-                                <i class="fa-solid fa-file-invoice-dollar"></i> Contas a Pagar (Despesas)
-                            </button>
-                        </li>
-                        <li>
-                            <button onclick="switchFinanceSubTab('extrato')" id="fin-tab-extrato" class="inline-flex items-center gap-2 p-3 border-b-2 font-bold transition-all border-transparent hover:text-slate-600">
-                                <i class="fa-solid fa-list-check"></i> Extrato de Caixa
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- 4.1 SUBTAB: CONTAS A PAGAR -->
-                <div id="finance-contas-view" class="space-y-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                        <div class="flex flex-col sm:flex-row gap-2 justify-between items-center">
-                            <!-- Filters -->
-                            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-grow max-w-xl">
-                                <div class="relative flex-grow">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                                    </span>
-                                    <input type="text" id="despesas-search" oninput="renderFinanceiro()" placeholder="Buscar despesa..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                                </div>
-                                <select id="despesas-filter-status" onchange="renderFinanceiro()" class="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none w-full sm:w-40 text-slate-600">
-                                    <option value="">Todos Status</option>
-                                    <option value="pendente">Pendente</option>
-                                    <option value="paga">Paga</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Expenses Table -->
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left text-slate-600">
-                                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-100">
-                                    <tr>
-                                        <th class="py-3 px-4">Vencimento</th>
-                                        <th class="py-3 px-4">Pagamento</th>
-                                        <th class="py-3 px-4">Categoria</th>
-                                        <th class="py-3 px-4">Descrição</th>
-                                        <th class="py-3 px-4 text-right">Valor</th>
-                                        <th class="py-3 px-4 text-center">Status</th>
-                                        <th class="py-3 px-4 text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="despesas-table-body" class="divide-y divide-slate-100">
-                                    <!-- Renderizado dinamicamente -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Empty State -->
-                        <div id="empty-despesas-state" class="hidden py-8 text-center">
-                            <i class="fa-solid fa-file-invoice text-4xl text-slate-300 mb-3"></i>
-                            <p class="text-sm font-semibold text-slate-500">Nenhuma despesa registrada</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4.2 SUBTAB: EXTRATO DE CAIXA -->
-                <div id="finance-extrato-view" class="hidden space-y-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                        <div class="flex flex-col sm:flex-row gap-2 justify-between items-center">
-                            <!-- Extrato Filters -->
-                            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-grow max-w-xl">
-                                <div class="relative flex-grow">
-                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                                    </span>
-                                    <input type="text" id="extrato-search" oninput="renderFinanceiro()" placeholder="Buscar lançamento..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                                </div>
-                                <select id="extrato-filter-type" onchange="renderFinanceiro()" class="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none w-full sm:w-40 text-slate-600">
-                                    <option value="">Todos Lançamentos</option>
-                                    <option value="entrada">Entradas (Receitas)</option>
-                                    <option value="saida">Saídas (Despesas)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Transactions Table -->
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left text-slate-600">
-                                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-100">
-                                    <tr>
-                                        <th class="py-3 px-4">Data/Hora</th>
-                                        <th class="py-3 px-4">Tipo</th>
-                                        <th class="py-3 px-4">Categoria</th>
-                                        <th class="py-3 px-4">Descrição</th>
-                                        <th class="py-3 px-4 text-center">Método Pagamento</th>
-                                        <th class="py-3 px-4 text-right">Valor</th>
-                                        <th class="py-3 px-4 text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="extrato-table-body" class="divide-y divide-slate-100">
-                                    <!-- Renderizado dinamicamente -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Empty State -->
-                        <div id="empty-extrato-state" class="hidden py-8 text-center">
-                            <i class="fa-solid fa-money-check-dollar text-4xl text-slate-300 mb-3"></i>
-                            <p class="text-sm font-semibold text-slate-500">Nenhum fluxo registrado no extrato</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 5. TAB: CONFIGURAÇÕES -->
-        <section id="tab-config" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Backup e Portabilidade -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                    <h3 class="text-md font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
-                        <i class="fa-solid fa-database text-samauma-600"></i> Backup & Sincronização Local
-                    </h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">
-                        Como o sistema funciona de forma offline diretamente no seu navegador, é de extrema importância exportar relatórios de backup regularmente para evitar perdas acidentais de dados ao limpar o navegador.
-                    </p>
-
-                    <div class="space-y-3 pt-2">
-                        <!-- Export -->
-                        <div>
-                            <h4 class="text-xs font-bold text-slate-700 mb-1">Exportar Dados (.JSON)</h4>
-                            <button onclick="exportDatabase()" class="w-full bg-samauma-700 hover:bg-samauma-800 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-download"></i> Gerar e Baixar Backup JSON
-                            </button>
-                        </div>
-                        
-                        <!-- Import -->
-                        <div class="pt-2 border-t border-slate-100">
-                            <h4 class="text-xs font-bold text-slate-700 mb-2">Importar Dados / Restaurar (.JSON)</h4>
-                            <div class="flex items-center gap-2">
-                                <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDatabase(event)">
-                                <button onclick="document.getElementById('import-file-input').click()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold py-2 px-4 rounded-lg text-xs transition-colors flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-upload"></i> Selecionar Arquivo Backup
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Exportação de Relatórios -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
-                    <h3 class="text-md font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
-                        <i class="fa-solid fa-file-csv text-samauma-accent"></i> Exportar Relatórios em Planilhas
-                    </h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">
-                        Gere relatórios tabulares em formato CSV que podem ser abertos facilmente em softwares como Microsoft Excel ou Google Planilhas.
-                    </p>
-
-                    <div class="grid grid-cols-1 gap-2 pt-2">
-                        <button onclick="exportReportCSV('produtos')" class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition-colors flex justify-between items-center">
-                            <span><i class="fa-solid fa-pizza-slice text-samauma-600 mr-2"></i> Relatório de Produtos (Catálogo)</span>
-                            <i class="fa-solid fa-chevron-right text-slate-400"></i>
-                        </button>
-                        <button onclick="exportReportCSV('vendas')" class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition-colors flex justify-between items-center">
-                            <span><i class="fa-solid fa-basket-shopping text-emerald-600 mr-2"></i> Relatório de Vendas Fechadas</span>
-                            <i class="fa-solid fa-chevron-right text-slate-400"></i>
-                        </button>
-                        <button onclick="exportReportCSV('despesas')" class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition-colors flex justify-between items-center">
-                            <span><i class="fa-solid fa-file-lines text-rose-600 mr-2"></i> Relatório de Despesas</span>
-                            <i class="fa-solid fa-chevron-right text-slate-400"></i>
-                        </button>
-                        <button onclick="exportReportCSV('transacoes')" class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition-colors flex justify-between items-center">
-                            <span><i class="fa-solid fa-chart-line text-cyan-600 mr-2"></i> Relatório Geral de Lançamentos (Caixa)</span>
-                            <i class="fa-solid fa-chevron-right text-slate-400"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Perigo / Gerenciamento de Banco -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4 md:col-span-2">
-                    <h3 class="text-md font-bold text-red-800 flex items-center gap-2 border-b border-slate-100 pb-3">
-                        <i class="fa-solid fa-circle-exclamation"></i> Zona de Segurança & Manutenção
-                    </h3>
-                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                        <div class="space-y-1">
-                            <h4 class="text-xs font-bold text-slate-700">Reinicializar Banco de Dados</h4>
-                            <p class="text-xs text-slate-500">Exclua todas as suas modificações atuais e recarregue a base de demonstração (ideal para testar o sistema).</p>
-                        </div>
-                        <button onclick="resetToDemoData()" class="w-full sm:w-auto bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 font-bold py-2 px-4 rounded-lg text-xs transition-colors">
-                            Recarregar Dados Demo
-                        </button>
-                    </div>
-                    
-                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between pt-4 border-t border-slate-100">
-                        <div class="space-y-1">
-                            <h4 class="text-xs font-bold text-rose-700">Apagar Banco de Dados Completamente</h4>
-                            <p class="text-xs text-slate-500">Remove definitivamente todos os produtos, vendas, despesas e transações armazenadas neste navegador.</p>
-                        </div>
-                        <button onclick="clearDatabase()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors">
-                            Limpar Banco de Dados
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="bg-samauma-950 text-samauma-300 py-6 border-t border-samauma-800 mt-auto text-center text-xs space-y-2">
-        <p>&copy; 2026 Balneário Samaúma. Todos os direitos reservados.</p>
-        <p class="text-samauma-400">Desenvolvido com foco em alta performance e portabilidade mobile imediata.</p>
-    </footer>
-
-
-    <!-- ==================== MODALS ==================== -->
-
-    <!-- Backdrop de Modais -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
-
-    <!-- 1. MODAL: ABRIR COMANDA -->
-    <div id="modal-abrir-comanda" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6 z-50 hidden">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-            <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
-                <i class="fa-solid fa-folder-plus text-samauma-600"></i> Abrir Atendimento
-            </h3>
-            <button onclick="closeModal('modal-abrir-comanda')" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-300">Comanda / Mesa / Cliente:</label>
+            <input type="text" id="venda-cliente" placeholder="Ex: Mesa 04 ou João" class="w-full mt-1 p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-300">Forma de Pagamento:</label>
+            <select id="venda-pagamento" class="w-full mt-1 p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <option value="PIX">PIX</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão de Débito">Cartão de Débito</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+            </select>
+          </div>
         </div>
-        <form onsubmit="handleAbrirComanda(event)" class="space-y-4 mt-4">
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Tipo de Cliente</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <label class="border border-slate-200 rounded-lg p-2.5 flex flex-col items-center gap-1 cursor-pointer hover:bg-slate-50 transition-colors select-none text-center">
-                        <input type="radio" name="customerType" value="Mesa" checked class="accent-samauma-600">
-                        <span class="text-xs font-bold text-slate-700 mt-1">Mesa</span>
-                    </label>
-                    <label class="border border-slate-200 rounded-lg p-2.5 flex flex-col items-center gap-1 cursor-pointer hover:bg-slate-50 transition-colors select-none text-center">
-                        <input type="radio" name="customerType" value="Comanda" class="accent-samauma-600">
-                        <span class="text-xs font-bold text-slate-700 mt-1">Comanda</span>
-                    </label>
-                    <label class="border border-slate-200 rounded-lg p-2.5 flex flex-col items-center gap-1 cursor-pointer hover:bg-slate-50 transition-colors select-none text-center">
-                        <input type="radio" name="customerType" value="Avulso" class="accent-samauma-600">
-                        <span class="text-xs font-bold text-slate-700 mt-1">Avulso</span>
-                    </label>
-                </div>
-            </div>
-            <div>
-                <label for="comanda-number-name" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Identificação / Número</label>
-                <input type="text" id="comanda-number-name" required placeholder="Ex: Mesa 12 ou Comanda 104" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-            </div>
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="closeModal('modal-abrir-comanda')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs transition-colors">Cancelar</button>
-                <button type="submit" class="w-1/2 bg-samauma-700 hover:bg-samauma-800 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">Iniciar Atendimento</button>
-            </div>
-        </form>
-    </div>
 
-    <!-- 2. MODAL: FECHAMENTO DE VENDA (PAYMENT) -->
-    <div id="modal-pagamento-venda" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6 z-50 hidden">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-            <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
-                <i class="fa-solid fa-cash-register text-samauma-600"></i> Fechar & Receber
-            </h3>
-            <button onclick="closeModal('modal-pagamento-venda')" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+        <!-- Selecionar Produto -->
+        <div class="flex gap-2 mb-3">
+          <select id="venda-produto-select" class="flex-1 p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+          <input type="number" id="venda-qtd" value="1" min="1" class="w-20 p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm text-center" />
+          <button onclick="adicionarItemCarrinho()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-lg font-bold text-sm shadow transition">
+            + Adicionar
+          </button>
         </div>
-        <form onsubmit="handleFecharVenda(event)" class="space-y-4 mt-4">
-            <!-- Resumo Total -->
-            <div class="bg-slate-50 p-4 rounded-xl flex justify-between items-center border border-slate-100">
-                <span class="text-xs font-bold text-slate-500">Valor Total a Cobrar:</span>
-                <span id="payment-modal-total" class="text-xl font-black text-samauma-750">R$ 0,00</span>
-            </div>
 
-            <!-- Método de Pagamento -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1.5">Forma de Recebimento</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <label class="border border-slate-200 rounded-lg p-3 flex items-center gap-2 cursor-pointer hover:bg-slate-50 select-none">
-                        <input type="radio" name="paymentMethod" value="Dinheiro" checked class="accent-samauma-600">
-                        <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-money-bill text-emerald-600 mr-1.5"></i> Dinheiro</span>
-                    </label>
-                    <label class="border border-slate-200 rounded-lg p-3 flex items-center gap-2 cursor-pointer hover:bg-slate-50 select-none">
-                        <input type="radio" name="paymentMethod" value="PIX" class="accent-samauma-600">
-                        <span class="text-xs font-bold text-slate-700"><i class="fa-brands fa-pix text-cyan-600 mr-1.5"></i> PIX</span>
-                    </label>
-                    <label class="border border-slate-200 rounded-lg p-3 flex items-center gap-2 cursor-pointer hover:bg-slate-50 select-none">
-                        <input type="radio" name="paymentMethod" value="Cartão de Débito" class="accent-samauma-600">
-                        <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-credit-card text-blue-600 mr-1.5"></i> Débito</span>
-                    </label>
-                    <label class="border border-slate-200 rounded-lg p-3 flex items-center gap-2 cursor-pointer hover:bg-slate-50 select-none">
-                        <input type="radio" name="paymentMethod" value="Cartão de Crédito" class="accent-samauma-600">
-                        <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-credit-card text-indigo-600 mr-1.5"></i> Crédito</span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Desconto Adicional (opcional) -->
-            <div>
-                <label for="payment-discount" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Desconto R$ (Opcional)</label>
-                <input type="number" id="payment-discount" min="0" step="0.01" oninput="recalculatePaymentTotal()" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-            </div>
-
-            <!-- Resumo Final após Desconto -->
-            <div id="payment-discount-row" class="hidden flex justify-between text-xs text-rose-600 font-semibold px-1">
-                <span>Desconto concedido:</span>
-                <span id="payment-discount-val">- R$ 0,00</span>
-            </div>
-
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="closeModal('modal-pagamento-venda')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg text-xs transition-colors">Voltar</button>
-                <button type="submit" class="w-1/2 bg-samauma-700 hover:bg-samauma-800 text-white font-bold py-2.5 rounded-lg text-xs transition-colors shadow-sm flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-check"></i> Concluir Venda
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <!-- 3. MODAL: NOVO PRODUTO / EDITAR PRODUTO -->
-    <div id="modal-novo-produto" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6 z-50 hidden">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-            <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5" id="product-modal-title">
-                <i class="fa-solid fa-box-open text-samauma-600"></i> Cadastrar Novo Produto
-            </h3>
-            <button onclick="closeModal('modal-novo-produto')" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+        <!-- Carrinho -->
+        <div class="border border-slate-700 rounded-lg p-3 bg-slate-900/50 mb-3">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Itens da Comanda</h3>
+          <ul id="carrinho-lista" class="divide-y divide-slate-800 text-sm">
+            <li class="text-slate-500 text-center py-2 text-xs">Nenhum item adicionado</li>
+          </ul>
+          <div class="flex justify-between items-center pt-2 mt-2 border-t border-slate-800 font-bold">
+            <span class="text-slate-300">Total:</span>
+            <span id="carrinho-total" class="text-blue-400 text-lg">R$ 0,00</span>
+          </div>
         </div>
-        <form onsubmit="handleNovoProduto(event)" class="space-y-4 mt-4">
-            <input type="hidden" id="prod-id"> <!-- Preenchido apenas na edição -->
-            
-            <div>
-                <label for="prod-name" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nome do Produto</label>
-                <input type="text" id="prod-name" required placeholder="Ex: Cerveja Heineken 350ml" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-            </div>
 
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label for="prod-category" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Categoria</label>
-                    <select id="prod-category" required class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                        <option value="Bebidas">Bebidas</option>
-                        <option value="Alimentos">Alimentos</option>
-                        <option value="Porções">Porções</option>
-                        <option value="Insumos Gerais">Insumos Gerais</option>
-                        <option value="Outros">Outros</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="prod-unit" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Und. Medida</label>
-                    <select id="prod-unit" required class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                        <option value="unidade">Unidade</option>
-                        <option value="litro">Litro</option>
-                        <option value="kg">Quilo (kg)</option>
-                        <option value="fardo">Fardo / Pack</option>
-                    </select>
-                </div>
-            </div>
+        <button onclick="finalizarVenda()" id="btn-finalizar" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-base shadow-md transition flex justify-center items-center gap-2">
+          <i class="fa-solid fa-check"></i> Concluir Venda
+        </button>
+      </div>
+    </section>
 
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label for="prod-cost-price" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Preço de Custo (R$)</label>
-                    <input type="number" id="prod-cost-price" required step="0.01" min="0" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                </div>
-                <div>
-                    <label for="prod-sell-price" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Preço de Venda (R$)</label>
-                    <input type="number" id="prod-sell-price" required step="0.01" min="0" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2" id="stock-initial-fields">
-                <div>
-                    <label for="prod-stock" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Estoque Inicial</label>
-                    <input type="number" id="prod-stock" step="any" min="0" value="0" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                </div>
-                <div>
-                    <label for="prod-min-stock" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Estoque Mínimo</label>
-                    <input type="number" id="prod-min-stock" step="any" min="0" value="5" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="closeModal('modal-novo-produto')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs transition-colors">Cancelar</button>
-                <button type="submit" class="w-1/2 bg-samauma-700 hover:bg-samauma-800 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm" id="btn-save-product">Cadastrar Produto</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- 4. MODAL: ENTRADA / COMPRA DE ESTOQUE -->
-    <div id="modal-entrada-estoque" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6 z-50 hidden">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-            <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
-                <i class="fa-solid fa-truck-loading text-samauma-600"></i> Registrar Compra (Entrada)
-            </h3>
-            <button onclick="closeModal('modal-entrada-estoque')" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+    <!-- ABA 2: ESTOQUE -->
+    <section id="aba-estoque" class="hidden space-y-4">
+      <div class="bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-700">
+        <h2 class="font-bold text-lg text-indigo-300 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-plus text-blue-400"></i> Cadastrar / Atualizar Produto
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+          <div class="col-span-2">
+            <label class="text-xs font-semibold text-slate-300">Nome do Item:</label>
+            <input type="text" id="prod-nome" placeholder="Ex: Cerveja Lata, Porção de Peixe" class="w-full mt-1 p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-300">Preço Custo (R$):</label>
+            <input type="number" step="0.50" id="prod-custo" placeholder="0.00" class="w-full mt-1 p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-300">Preço Venda (R$):</label>
+            <input type="number" step="0.50" id="prod-venda" placeholder="0.00" class="w-full mt-1 p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm" />
+          </div>
+          <div class="col-span-2 sm:col-span-2">
+            <label class="text-xs font-semibold text-slate-300">Categoria:</label>
+            <select id="prod-cat" class="w-full mt-1 p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm">
+              <option value="Bebidas">Bebidas</option>
+              <option value="Porções/Comida">Porções/Comida</option>
+              <option value="Entrada/Pulseira">Entrada / Pulseira</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div class="col-span-2 sm:col-span-2">
+            <label class="text-xs font-semibold text-slate-300">Quantidade em Estoque:</label>
+            <input type="number" id="prod-qtd" placeholder="0" class="w-full mt-1 p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm" />
+          </div>
         </div>
-        <form onsubmit="handleEntradaEstoque(event)" class="space-y-4 mt-4">
-            <div>
-                <label for="entrada-prod-id" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Selecione o Produto</label>
-                <select id="entrada-prod-id" required onchange="updateEntradaHelperInfo()" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                    <!-- Preenchido dinamicamente -->
-                </select>
-            </div>
-            
-            <div class="bg-slate-50 p-3 rounded-lg text-xs space-y-1 border border-slate-100 text-slate-600" id="entrada-helper-info">
-                <!-- Informações auxiliares do estoque atual e custo atual serão injetados aqui -->
-                Selecione um produto para visualizar o estoque.
-            </div>
+        <button onclick="salvarProduto()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold text-sm shadow transition">
+          Salvar Produto
+        </button>
+      </div>
 
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label for="entrada-qty" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Quantidade Comprada</label>
-                    <input type="number" id="entrada-qty" required step="any" min="0.01" placeholder="0" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                </div>
-                <div>
-                    <label for="entrada-cost-price" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Preço de Custo (Unidade)</label>
-                    <input type="number" id="entrada-cost-price" required step="0.01" min="0" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                </div>
-            </div>
+      <!-- Lista de Estoque -->
+      <div class="bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-700 overflow-x-auto">
+        <h3 class="font-bold text-md text-indigo-300 mb-2">Estoque Atual</h3>
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-slate-700 bg-slate-900 text-slate-400">
+              <th class="p-2">Item</th>
+              <th class="p-2">Cat.</th>
+              <th class="p-2">Qtd</th>
+              <th class="p-2">Venda</th>
+              <th class="p-2 text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-estoque" class="divide-y divide-slate-700 text-slate-200"></tbody>
+        </table>
+      </div>
+    </section>
 
-            <div class="bg-samauma-50 p-3 rounded-lg text-xs font-medium text-samauma-800" id="entrada-avg-cost-preview">
-                Custo Médio Futuro: R$ 0,00
-            </div>
-
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="closeModal('modal-entrada-estoque')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs transition-colors">Cancelar</button>
-                <button type="submit" class="w-1/2 bg-samauma-700 hover:bg-samauma-800 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">Confirmar Entrada</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- 5. MODAL: PERDA / DESCARTE DE ESTOQUE -->
-    <div id="modal-perda-estoque" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6 z-50 hidden">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-            <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
-                <i class="fa-solid fa-circle-minus text-rose-600"></i> Registrar Perda / Descarte
-            </h3>
-            <button onclick="closeModal('modal-perda-estoque')" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+    <!-- ABA 3: BALANÇO FINANCEIRO -->
+    <section id="aba-financeiro" class="hidden space-y-4">
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-blue-700 text-white p-3 rounded-xl shadow-sm">
+          <span class="text-xs opacity-80 block">Entradas</span>
+          <span id="card-entradas" class="text-base sm:text-lg font-bold">R$ 0,00</span>
         </div>
-        <form onsubmit="handlePerdaEstoque(event)" class="space-y-4 mt-4">
-            <div>
-                <label for="perda-prod-id" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Selecione o Produto</label>
-                <select id="perda-prod-id" required onchange="updatePerdaHelperInfo()" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                    <!-- Preenchido dinamicamente -->
-                </select>
-            </div>
-            
-            <div class="bg-slate-50 p-3 rounded-lg text-xs space-y-1 border border-slate-100 text-slate-600" id="perda-helper-info">
-                Selecione um produto para visualizar o estoque.
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label for="perda-qty" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Quantidade Perdida</label>
-                    <input type="number" id="perda-qty" required step="any" min="0.01" placeholder="0" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                </div>
-                <div>
-                    <label for="perda-reason" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Motivo / Justificativa</label>
-                    <select id="perda-reason" required class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                        <option value="Validade Vencida">Validade Vencida</option>
-                        <option value="Deteriorado / Estragado">Deteriorado / Estragado</option>
-                        <option value="Quebra / Acidente / Queda">Quebra / Acidente / Queda</option>
-                        <option value="Consumo Próprio / Degustação">Consumo Próprio / Degustação</option>
-                        <option value="Outros">Outros</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="closeModal('modal-perda-estoque')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs transition-colors">Cancelar</button>
-                <button type="submit" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">Confirmar Baixa por Perda</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- 6. MODAL: NOVA DESPESA (FINANCEIRO) -->
-    <div id="modal-nova-despesa" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6 z-50 hidden">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-            <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
-                <i class="fa-solid fa-file-invoice-dollar text-rose-600"></i> Registrar Nova Despesa
-            </h3>
-            <button onclick="closeModal('modal-nova-despesa')" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+        <div class="bg-rose-700 text-white p-3 rounded-xl shadow-sm">
+          <span class="text-xs opacity-80 block">Custos/Saídas</span>
+          <span id="card-saidas" class="text-base sm:text-lg font-bold">R$ 0,00</span>
         </div>
-        <form onsubmit="handleNovaDespesa(event)" class="space-y-4 mt-4">
-            <div>
-                <label for="despesa-desc" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Descrição</label>
-                <input type="text" id="despesa-desc" required placeholder="Ex: Conta de Energia - Agosto" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label for="despesa-category" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Categoria</label>
-                    <select id="despesa-category" required class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                        <option value="Fixa">Despesa Fixa (Água, Luz, etc)</option>
-                        <option value="Variável">Despesa Variável (Gelo, etc)</option>
-                        <option value="Pessoal">Pessoal / Salários</option>
-                        <option value="Manutenção">Manutenção / Reparo</option>
-                        <option value="Compras">Compra de Mercadorias / Reposição</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="despesa-amount" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Valor (R$)</label>
-                    <input type="number" id="despesa-amount" required step="0.01" min="0.01" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label for="despesa-due-date" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Data de Vencimento</label>
-                    <input type="date" id="despesa-due-date" required class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                </div>
-                <div>
-                    <label for="despesa-status" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Status Inicial</label>
-                    <select id="despesa-status" onchange="toggleDespesaPagamentoCampos()" required class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                        <option value="pendente">Pendente</option>
-                        <option value="paga">Paga</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Campos condicionais para Despesa Paga -->
-            <div id="despesa-paga-campos" class="hidden grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                <div>
-                    <label for="despesa-pay-method" class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Forma de Pagamento</label>
-                    <select id="despesa-pay-method" class="w-full border border-slate-300 bg-white rounded px-2 py-1 text-xs focus:outline-none text-slate-700">
-                        <option value="Dinheiro">Dinheiro</option>
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="despesa-pay-date" class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Data do Pagamento</label>
-                    <input type="date" id="despesa-pay-date" class="w-full border border-slate-300 rounded px-2 py-1 text-xs focus:outline-none text-slate-700">
-                </div>
-            </div>
-
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="closeModal('modal-nova-despesa')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs transition-colors">Cancelar</button>
-                <button type="submit" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">Salvar Despesa</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- 7. MODAL: PAGAMENTO DE DESPESA PENDENTE -->
-    <div id="modal-pagar-despesa" class="modal fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6 z-50 hidden">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-            <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
-                <i class="fa-solid fa-hand-holding-dollar text-emerald-600"></i> Baixar Pagamento de Despesa
-            </h3>
-            <button onclick="closeModal('modal-pagar-despesa')" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+        <div class="bg-indigo-950 text-white p-3 rounded-xl shadow-sm border border-indigo-800">
+          <span class="text-xs opacity-80 block">Lucro Líquido</span>
+          <span id="card-lucro" class="text-base sm:text-lg font-bold">R$ 0,00</span>
         </div>
-        <form onsubmit="handlePagarDespesa(event)" class="space-y-4 mt-4">
-            <input type="hidden" id="pagar-despesa-id">
+      </div>
 
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm space-y-1">
-                <div class="flex justify-between text-slate-500 text-xs"><span>Despesa:</span> <span id="pagar-despesa-desc" class="font-bold text-slate-700">Conta de Água</span></div>
-                <div class="flex justify-between text-slate-500 text-xs"><span>Valor:</span> <span id="pagar-despesa-amount" class="font-bold text-slate-800">R$ 120,00</span></div>
+      <!-- Lançar Despesa -->
+      <div class="bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-700">
+        <h3 class="font-bold text-sm text-slate-300 mb-2">Lançar Despesa / Saída de Caixa</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
+          <input type="text" id="desp-desc" placeholder="Ex: Gelo, Carvão, Limpeza" class="p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm" />
+          <input type="number" step="0.50" id="desp-valor" placeholder="Valor R$" class="p-2 bg-slate-900 border border-slate-700 text-white rounded-lg text-sm" />
+          <button onclick="lancarDespesa()" class="bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-sm py-2 shadow transition">
+            Registrar Saída
+          </button>
+        </div>
+      </div>
+
+      <!-- Extrato Recente -->
+      <div class="bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-700">
+        <h3 class="font-bold text-sm text-slate-300 mb-2">Histórico Financeiro</h3>
+        <ul id="lista-historico" class="divide-y divide-slate-700 text-xs max-h-64 overflow-y-auto"></ul>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const SUPABASE_URL = 'https://dglftygowdzgqlmnvnpd.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_4LwU9uPABP_td1NZ4T0qEA_ApHWJAOJ'; 
+    
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let state = {
+      produtos: [],
+      vendas: [],
+      despesas: [],
+      carrinho: []
+    };
+
+    async function carregarTudo() {
+      try {
+        const { data: produtos } = await db.from('produtos').select('*').order('nome');
+        const { data: vendas } = await db.from('vendas').select('*').order('created_at', { ascending: false });
+        const { data: despesas } = await db.from('despesas').select('*').order('created_at', { ascending: false });
+
+        state.produtos = produtos || [];
+        state.vendas = vendas || [];
+        state.despesas = despesas || [];
+
+        renderTudo();
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+      }
+    }
+
+    function trocarAba(aba) {
+      ['pdv', 'estoque', 'financeiro'].forEach(a => {
+        document.getElementById(`aba-${a}`).classList.add('hidden');
+        document.getElementById(`tab-${a}`).className = "py-3 px-2 flex-1 border-b-4 border-transparent text-indigo-200 hover:text-white";
+      });
+      document.getElementById(`aba-${aba}`).classList.remove('hidden');
+      document.getElementById(`tab-${aba}`).className = "py-3 px-2 flex-1 border-b-4 border-blue-400 font-bold bg-indigo-950/80";
+    }
+
+    function renderProdutosSelect() {
+      const select = document.getElementById('venda-produto-select');
+      select.innerHTML = state.produtos.map(p => 
+        `<option value="${p.id}">${p.nome} (Estoque: ${p.qtd}) - R$ ${Number(p.venda).toFixed(2)}</option>`
+      ).join('');
+    }
+
+    function renderTabelaEstoque() {
+      const tbody = document.getElementById('tabela-estoque');
+      tbody.innerHTML = state.produtos.map(p => `
+        <tr class="hover:bg-slate-700/50">
+          <td class="p-2 font-medium">${p.nome}</td>
+          <td class="p-2 text-slate-400">${p.categoria}</td>
+          <td class="p-2 ${p.qtd <= 5 ? 'text-rose-400 font-bold' : ''}">${p.qtd}</td>
+          <td class="p-2 font-semibold text-blue-400">R$ ${Number(p.venda).toFixed(2)}</td>
+          <td class="p-2 text-center">
+            <button onclick="excluirProduto(${p.id})" class="text-rose-400 hover:text-rose-300">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function salvarProduto() {
+      const nome = document.getElementById('prod-nome').value.trim();
+      const custo = parseFloat(document.getElementById('prod-custo').value) || 0;
+      const venda = parseFloat(document.getElementById('prod-venda').value) || 0;
+      const categoria = document.getElementById('prod-cat').value;
+      const qtd = parseInt(document.getElementById('prod-qtd').value) || 0;
+
+      if (!nome || venda <= 0) return alert("Preencha o nome e o preço de venda!");
+
+      await db.from('produtos').insert([{ nome, custo, venda, categoria, qtd }]);
+      
+      document.getElementById('prod-nome').value = '';
+      document.getElementById('prod-custo').value = '';
+      document.getElementById('prod-venda').value = '';
+      document.getElementById('prod-qtd').value = '';
+      carregarTudo();
+    }
+
+    async function excluirProduto(id) {
+      if (confirm("Remover este produto?")) {
+        await db.from('produtos').delete().eq('id', id);
+        carregarTudo();
+      }
+    }
+
+    function adicionarItemCarrinho() {
+      const prodId = parseInt(document.getElementById('venda-produto-select').value);
+      const qtd = parseInt(document.getElementById('venda-qtd').value) || 1;
+      const prod = state.produtos.find(p => p.id === prodId);
+
+      if (!prod) return;
+      if (qtd > prod.qtd) return alert("Quantidade maior que o estoque atual!");
+
+      state.carrinho.push({ ...prod, qtdVenda: qtd, subtotal: prod.venda * qtd, custoTotal: prod.custo * qtd });
+      renderCarrinho();
+    }
+
+    function renderCarrinho() {
+      const lista = document.getElementById('carrinho-lista');
+      if (state.carrinho.length === 0) {
+        lista.innerHTML = `<li class="text-slate-500 text-center py-2 text-xs">Nenhum item adicionado</li>`;
+        document.getElementById('carrinho-total').innerText = "R$ 0,00";
+        return;
+      }
+
+      let total = 0;
+      lista.innerHTML = state.carrinho.map((item, index) => {
+        total += item.subtotal;
+        return `
+          <li class="py-2 flex justify-between items-center text-slate-200">
+            <span>${item.qtdVenda}x ${item.nome}</span>
+            <div class="flex items-center gap-3">
+              <span class="font-bold text-blue-400">R$ ${item.subtotal.toFixed(2)}</span>
+              <button onclick="removerDoCarrinho(${index})" class="text-rose-400 text-xs"><i class="fa-solid fa-times"></i></button>
             </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label for="pagar-method" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Forma de Pagamento</label>
-                    <select id="pagar-method" required class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm bg-white focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                        <option value="Dinheiro">Dinheiro</option>
-                        <option value="PIX" selected>PIX</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="pagar-date" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Data do Pagamento</label>
-                    <input type="date" id="pagar-date" required class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none text-slate-700">
-                </div>
-            </div>
-
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="closeModal('modal-pagar-despesa')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs transition-colors">Voltar</button>
-                <button type="submit" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">Confirmar Pagamento</button>
-            </div>
-        </form>
-    </div>
-
-
-
-    <!-- ==================== LOGICA JAVASCRIPT ==================== -->
-    <script>
-        // ==========================================
-        // 1. STATE & STORE (SamaumaStore)
-        // ==========================================
-        class SamaumaStore {
-            static get(key, defaultValue = []) {
-                const data = localStorage.getItem(`samauma_${key}`);
-                return data ? JSON.parse(data) : defaultValue;
-            }
-
-            static set(key, value) {
-                localStorage.setItem(`samauma_${key}`, JSON.stringify(value));
-            }
-
-            static clearAll() {
-                localStorage.removeItem('samauma_products');
-                localStorage.removeItem('samauma_sales');
-                localStorage.removeItem('samauma_expenses');
-                localStorage.removeItem('samauma_transactions');
-            }
-
-            // Carrega dados de exemplo para demonstração rápida do sistema
-            static loadDemoData() {
-                const defaultProducts = [
-                    { id: "prod_1", name: "Água Mineral 500ml", category: "Bebidas", unit: "unidade", costPrice: 1.50, sellPrice: 4.00, stock: 45, minStock: 15 },
-                    { id: "prod_2", name: "Cerveja Heineken Long Neck", category: "Bebidas", unit: "unidade", costPrice: 4.50, sellPrice: 9.00, stock: 12, minStock: 20 },
-                    { id: "prod_3", name: "Porção de Batata Frita", category: "Porções", unit: "unidade", costPrice: 8.00, sellPrice: 25.00, stock: 25, minStock: 5 },
-                    { id: "prod_4", name: "Isca de Peixe (Tambaqui)", category: "Alimentos", unit: "unidade", costPrice: 15.00, sellPrice: 45.00, stock: 8, minStock: 5 },
-                    { id: "prod_5", name: "Refrigerante Lata", category: "Bebidas", unit: "unidade", costPrice: 2.00, sellPrice: 6.00, stock: 35, minStock: 12 }
-                ];
-
-                const today = new Date();
-                const formatDate = (offsetDays = 0) => {
-                    const d = new Date();
-                    d.setDate(today.getDate() - offsetDays);
-                    return d.toISOString().split('T')[0];
-                };
-
-                const defaultExpenses = [
-                    { id: "exp_1", dueDate: formatDate(15), payDate: formatDate(15), category: "Fixa", description: "Energia Elétrica Balneário", amount: 350.00, status: "paga" },
-                    { id: "exp_2", dueDate: formatDate(10), payDate: formatDate(10), category: "Fixa", description: "Internet Fibra Óptica", amount: 120.00, status: "paga" },
-                    { id: "exp_3", dueDate: formatDate(0), payDate: "", category: "Compras", description: "Compra de Gelo (Reposição)", amount: 60.00, status: "pendente" },
-                    { id: "exp_4", dueDate: formatDate(-3), payDate: "", category: "Pessoal", description: "Diária de Salva-vidas", amount: 200.00, status: "pendente" }
-                ];
-
-                const defaultSales = [
-                    {
-                        id: "sale_1",
-                        date: new Date(new Date().setDate(today.getDate() - 1)).toISOString(), // ontem
-                        customerType: "Mesa",
-                        customerName: "Mesa 04",
-                        items: [
-                            { productId: "prod_2", name: "Cerveja Heineken Long Neck", quantity: 4, costPrice: 4.50, sellPrice: 9.00 },
-                            { productId: "prod_3", name: "Porção de Batata Frita", quantity: 1, costPrice: 8.00, sellPrice: 25.00 }
-                        ],
-                        totalAmount: 61.00,
-                        discount: 0,
-                        paymentMethod: "PIX",
-                        status: "closed"
-                    },
-                    {
-                        id: "sale_2",
-                        date: new Date().toISOString(), // hoje
-                        customerType: "Mesa",
-                        customerName: "Mesa 02",
-                        items: [
-                            { productId: "prod_4", name: "Isca de Peixe (Tambaqui)", quantity: 1, costPrice: 15.00, sellPrice: 45.00 },
-                            { productId: "prod_1", name: "Água Mineral 500ml", quantity: 2, costPrice: 1.50, sellPrice: 4.00 }
-                        ],
-                        totalAmount: 53.00,
-                        discount: 0,
-                        paymentMethod: "Cartão de Crédito",
-                        status: "closed"
-                    },
-                    {
-                        id: "sale_3",
-                        date: new Date().toISOString(), // hoje aberta
-                        customerType: "Mesa",
-                        customerName: "Mesa 03",
-                        items: [
-                            { productId: "prod_2", name: "Cerveja Heineken Long Neck", quantity: 2, costPrice: 4.50, sellPrice: 9.00 },
-                            { productId: "prod_3", name: "Porção de Batata Frita", quantity: 1, costPrice: 8.00, sellPrice: 25.00 }
-                        ],
-                        totalAmount: 43.00,
-                        discount: 0,
-                        paymentMethod: "",
-                        status: "open"
-                    }
-                ];
-
-                const defaultTransactions = [
-                    {
-                        id: "tx_1",
-                        date: new Date(new Date().setDate(today.getDate() - 15)).toISOString(),
-                        type: "saida",
-                        category: "Despesas",
-                        description: "Pagamento: Energia Elétrica Balneário",
-                        amount: 350.00,
-                        paymentMethod: "PIX",
-                        referenceId: "exp_1"
-                    },
-                    {
-                        id: "tx_2",
-                        date: new Date(new Date().setDate(today.getDate() - 10)).toISOString(),
-                        type: "saida",
-                        category: "Despesas",
-                        description: "Pagamento: Internet Fibra Óptica",
-                        amount: 120.00,
-                        paymentMethod: "PIX",
-                        referenceId: "exp_2"
-                    },
-                    {
-                        id: "tx_3",
-                        date: new Date(new Date().setDate(today.getDate() - 1)).toISOString(),
-                        type: "entrada",
-                        category: "Vendas",
-                        description: "Venda Fechada - Mesa 04",
-                        amount: 61.00,
-                        paymentMethod: "PIX",
-                        referenceId: "sale_1"
-                    },
-                    {
-                        id: "tx_4",
-                        date: new Date().toISOString(),
-                        type: "entrada",
-                        category: "Vendas",
-                        description: "Venda Fechada - Mesa 02",
-                        amount: 53.00,
-                        paymentMethod: "Cartão de Crédito",
-                        referenceId: "sale_2"
-                    }
-                ];
-
-                this.set('products', defaultProducts);
-                this.set('expenses', defaultExpenses);
-                this.set('sales', defaultSales);
-                this.set('transactions', defaultTransactions);
-            }
-        }
-
-        // ==========================================
-        // 2. BUSINESS LOGIC SERVICES (SamaumaService)
-        // ==========================================
-        class SamaumaService {
-            
-            // --- PRODUTOS & COMPRAS ---
-            static saveProduct(product) {
-                const products = SamaumaStore.get('products', []);
-                const idx = products.findIndex(p => p.id === product.id);
-                
-                if (idx >= 0) {
-                    // Mantém o estoque original
-                    product.stock = products[idx].stock;
-                    products[idx] = product;
-                } else {
-                    product.id = `prod_${Date.now()}`;
-                    products.push(product);
-                }
-                SamaumaStore.set('products', products);
-                return product;
-            }
-
-            static deleteProduct(id) {
-                const products = SamaumaStore.get('products', []);
-                // Verifica se há alguma venda contendo o produto
-                const sales = SamaumaStore.get('sales', []);
-                const isUsed = sales.some(sale => sale.items.some(item => item.productId === id));
-                
-                if (isUsed) {
-                    throw new Error("Este produto não pode ser excluído pois já possui histórico de vendas.");
-                }
-
-                const filtered = products.filter(p => p.id !== id);
-                SamaumaStore.set('products', filtered);
-            }
-
-            static registerStockPurchase(productId, addedQty, purchaseCost) {
-                const products = SamaumaStore.get('products', []);
-                const product = products.find(p => p.id === productId);
-                
-                if (!product) throw new Error("Produto não encontrado.");
-
-                const currentStock = parseFloat(product.stock) || 0;
-                const currentCost = parseFloat(product.costPrice) || 0;
-                const newQty = parseFloat(addedQty);
-                const newCost = parseFloat(purchaseCost);
-
-                // Cálculo do custo médio ponderado
-                const totalStock = currentStock + newQty;
-                let newAverageCost = currentCost;
-                if (totalStock > 0) {
-                    newAverageCost = ((currentStock * currentCost) + (newQty * newCost)) / totalStock;
-                }
-
-                product.stock = totalStock;
-                product.costPrice = parseFloat(newAverageCost.toFixed(2));
-
-                SamaumaStore.set('products', products);
-
-                // Lança a compra como uma despesa e também no fluxo de caixa automático
-                const expense = {
-                    id: `exp_compra_${Date.now()}`,
-                    dueDate: new Date().toISOString().split('T')[0],
-                    payDate: new Date().toISOString().split('T')[0],
-                    category: "Compras",
-                    description: `Restoque: ${newQty}x ${product.name}`,
-                    amount: parseFloat((newQty * newCost).toFixed(2)),
-                    status: "paga"
-                };
-
-                const expenses = SamaumaStore.get('expenses', []);
-                expenses.push(expense);
-                SamaumaStore.set('expenses', expenses);
-
-                // Registrar transação imediata
-                const tx = {
-                    id: `tx_${Date.now()}`,
-                    date: new Date().toISOString(),
-                    type: "saida",
-                    category: "Despesas",
-                    description: `Compra Estoque: ${product.name}`,
-                    amount: expense.amount,
-                    paymentMethod: "PIX", // Padrão
-                    referenceId: expense.id
-                };
-                const transactions = SamaumaStore.get('transactions', []);
-                transactions.push(tx);
-                SamaumaStore.set('transactions', transactions);
-            }
-
-            static registerStockLoss(productId, lossQty, reason) {
-                const products = SamaumaStore.get('products', []);
-                const product = products.find(p => p.id === productId);
-                
-                if (!product) throw new Error("Produto não encontrado.");
-                if (product.stock < lossQty) throw new Error("Estoque insuficiente para registrar essa perda.");
-
-                product.stock = parseFloat((product.stock - lossQty).toFixed(2));
-                SamaumaStore.set('products', products);
-
-                // Lança o descarte como custo operacional
-                const lossVal = parseFloat((lossQty * product.costPrice).toFixed(2));
-                const expense = {
-                    id: `exp_perda_${Date.now()}`,
-                    dueDate: new Date().toISOString().split('T')[0],
-                    payDate: new Date().toISOString().split('T')[0],
-                    category: "Manutenção",
-                    description: `Descarte/Perda (${reason}): ${lossQty}x ${product.name}`,
-                    amount: lossVal,
-                    status: "paga"
-                };
-
-                const expenses = SamaumaStore.get('expenses', []);
-                expenses.push(expense);
-                SamaumaStore.set('expenses', expenses);
-
-                // Transação linear de saída
-                const tx = {
-                    id: `tx_${Date.now()}`,
-                    date: new Date().toISOString(),
-                    type: "saida",
-                    category: "Despesas",
-                    description: `Descarte: ${product.name}`,
-                    amount: lossVal,
-                    paymentMethod: "Dinheiro",
-                    referenceId: expense.id
-                };
-                const transactions = SamaumaStore.get('transactions', []);
-                transactions.push(tx);
-                SamaumaStore.set('transactions', transactions);
-            }
-
-            // --- VENDAS & ATENDIMENTOS (PDV) ---
-            static openSaleOrder(customerType, customerName) {
-                const sales = SamaumaStore.get('sales', []);
-                const newOrder = {
-                    id: `sale_${Date.now()}`,
-                    date: new Date().toISOString(),
-                    customerType: customerType,
-                    customerName: customerName,
-                    items: [],
-                    totalAmount: 0,
-                    discount: 0,
-                    paymentMethod: "",
-                    status: "open"
-                };
-                sales.push(newOrder);
-                SamaumaStore.set('sales', sales);
-                return newOrder;
-            }
-
-            static addProductToSale(saleId, productId, quantity = 1) {
-                const sales = SamaumaStore.get('sales', []);
-                const products = SamaumaStore.get('products', []);
-                const sale = sales.find(s => s.id === saleId);
-                const product = products.find(p => p.id === productId);
-
-                if (!sale || !product) return;
-
-                const itemIdx = sale.items.findIndex(i => i.productId === productId);
-                if (itemIdx >= 0) {
-                    sale.items[itemIdx].quantity += quantity;
-                } else {
-                    sale.items.push({
-                        productId: product.id,
-                        name: product.name,
-                        quantity: quantity,
-                        costPrice: product.costPrice,
-                        sellPrice: product.sellPrice
-                    });
-                }
-                
-                // Recalcula total da comanda
-                sale.totalAmount = parseFloat(sale.items.reduce((sum, item) => sum + (item.sellPrice * item.quantity), 0).toFixed(2));
-                
-                SamaumaStore.set('sales', sales);
-                return sale;
-            }
-
-            static updateCartItemQty(saleId, productId, newQty) {
-                const sales = SamaumaStore.get('sales', []);
-                const sale = sales.find(s => s.id === saleId);
-                if (!sale) return;
-
-                const item = sale.items.find(i => i.productId === productId);
-                if (!item) return;
-
-                if (newQty <= 0) {
-                    sale.items = sale.items.filter(i => i.productId !== productId);
-                } else {
-                    item.quantity = newQty;
-                }
-
-                sale.totalAmount = parseFloat(sale.items.reduce((sum, item) => sum + (item.sellPrice * item.quantity), 0).toFixed(2));
-                SamaumaStore.set('sales', sales);
-                return sale;
-            }
-
-            static removeCartItem(saleId, productId) {
-                return this.updateCartItemQty(saleId, productId, 0);
-            }
-
-            static cancelSaleOrder(saleId) {
-                const sales = SamaumaStore.get('sales', []);
-                const filtered = sales.filter(s => s.id !== saleId);
-                SamaumaStore.set('sales', filtered);
-            }
-
-            static finalizeSale(saleId, paymentMethod, discount = 0) {
-                const sales = SamaumaStore.get('sales', []);
-                const products = SamaumaStore.get('products', []);
-                const sale = sales.find(s => s.id === saleId);
-
-                if (!sale) throw new Error("Venda não encontrada.");
-                if (sale.items.length === 0) throw new Error("A comanda está vazia.");
-
-                // 1. Validar e baixar estoque de cada produto
-                sale.items.forEach(item => {
-                    const prod = products.find(p => p.id === item.productId);
-                    if (prod) {
-                        if (prod.stock < item.quantity) {
-                            console.warn(`Estoque do produto ${prod.name} ficou negativo.`);
-                        }
-                        prod.stock = parseFloat((prod.stock - item.quantity).toFixed(2));
-                    }
-                });
-
-                // 2. Atualizar dados da venda
-                sale.status = "closed";
-                sale.paymentMethod = paymentMethod;
-                sale.discount = parseFloat(discount) || 0;
-                sale.totalAmount = parseFloat((sale.totalAmount - sale.discount).toFixed(2));
-                sale.date = new Date().toISOString();
-
-                // Salva produtos e vendas atualizados
-                SamaumaStore.set('products', products);
-                SamaumaStore.set('sales', sales);
-
-                // 3. Criar Transação de Entrada Financeira
-                const tx = {
-                    id: `tx_${Date.now()}`,
-                    date: sale.date,
-                    type: "entrada",
-                    category: "Vendas",
-                    description: `Venda Fechada: ${sale.customerName}`,
-                    amount: sale.totalAmount,
-                    paymentMethod: paymentMethod,
-                    referenceId: sale.id
-                };
-
-                const transactions = SamaumaStore.get('transactions', []);
-                transactions.push(tx);
-                SamaumaStore.set('transactions', transactions);
-
-                return sale;
-            }
-
-            // --- FINANCEIRO (DESPESAS) ---
-            static saveExpense(expense) {
-                const expenses = SamaumaStore.get('expenses', []);
-                expense.id = `exp_${Date.now()}`;
-                expenses.push(expense);
-                SamaumaStore.set('expenses', expenses);
-
-                // Se o status for pago, já gera lançamento imediato no caixa
-                if (expense.status === 'paga') {
-                    const tx = {
-                        id: `tx_${Date.now()}`,
-                        date: expense.payDate ? new Date(expense.payDate).toISOString() : new Date().toISOString(),
-                        type: "saida",
-                        category: "Despesas",
-                        description: `Pagamento: ${expense.description}`,
-                        amount: expense.amount,
-                        paymentMethod: expense.payMethod || "Dinheiro",
-                        referenceId: expense.id
-                    };
-                    const transactions = SamaumaStore.get('transactions', []);
-                    transactions.push(tx);
-                    SamaumaStore.set('transactions', transactions);
-                }
-            }
-
-            static payPendingExpense(expenseId, payDate, payMethod) {
-                const expenses = SamaumaStore.get('expenses', []);
-                const expense = expenses.find(e => e.id === expenseId);
-                
-                if (!expense) throw new Error("Despesa não encontrada.");
-                
-                expense.status = 'paga';
-                expense.payDate = payDate;
-                expense.payMethod = payMethod;
-                SamaumaStore.set('expenses', expenses);
-
-                // Gera transação linear
-                const tx = {
-                    id: `tx_${Date.now()}`,
-                    date: new Date(payDate).toISOString(),
-                    type: "saida",
-                    category: "Despesas",
-                    description: `Pagamento: ${expense.description}`,
-                    amount: expense.amount,
-                    paymentMethod: payMethod,
-                    referenceId: expense.id
-                };
-                const transactions = SamaumaStore.get('transactions', []);
-                transactions.push(tx);
-                SamaumaStore.set('transactions', transactions);
-            }
-
-            static deleteExpense(expenseId) {
-                const expenses = SamaumaStore.get('expenses', []);
-                const filteredExpenses = expenses.filter(e => e.id !== expenseId);
-                SamaumaStore.set('expenses', filteredExpenses);
-
-                // Remove a transação associada se houver
-                const transactions = SamaumaStore.get('transactions', []);
-                const filteredTransactions = transactions.filter(t => t.referenceId !== expenseId);
-                SamaumaStore.set('transactions', filteredTransactions);
-            }
-
-            // --- FILTROS DE DATA & RELATÓRIOS ---
-            static filterByPeriod(dataArray, period, dateField = 'date', startStr = '', endStr = '') {
-                const todayStr = new Date().toISOString().split('T')[0];
-                const now = new Date();
-
-                return dataArray.filter(item => {
-                    if (!item[dateField]) return false;
-                    const itemDateStr = item[dateField].split('T')[0];
-
-                    if (period === 'hoje') {
-                        return itemDateStr === todayStr;
-                    } else if (period === 'semana') {
-                        const start = new Date();
-                        start.setDate(now.getDate() - 7);
-                        return itemDateStr >= start.toISOString().split('T')[0] && itemDateStr <= todayStr;
-                    } else if (period === 'mes') {
-                        const start = new Date(now.getFullYear(), now.getMonth(), 1);
-                        return itemDateStr >= start.toISOString().split('T')[0] && itemDateStr <= todayStr;
-                    } else if (period === 'custom') {
-                        return (!startStr || itemDateStr >= startStr) && (!endStr || itemDateStr <= endStr);
-                    }
-                    return true; // default: Todos
-                });
-            }
-
-            static getDashboardStats(period, startStr = '', endStr = '') {
-                const transactions = SamaumaStore.get('transactions', []);
-                const sales = SamaumaStore.get('sales', []);
-                const expenses = SamaumaStore.get('expenses', []);
-                
-                const filteredTx = this.filterByPeriod(transactions, period, 'date', startStr, endStr);
-                const filteredSales = this.filterByPeriod(sales, period, 'date', startStr, endStr);
-                const filteredExpenses = this.filterByPeriod(expenses, period, 'dueDate', startStr, endStr);
-
-                // 1. Entradas (Total Faturamento de Vendas Fechadas)
-                const entradas = filteredTx
-                    .filter(t => t.type === 'entrada')
-                    .reduce((sum, t) => sum + t.amount, 0);
-
-                // 2. Saídas (Despesas / Custos Pagos)
-                const saidas = filteredTx
-                    .filter(t => t.type === 'saida')
-                    .reduce((sum, t) => sum + t.amount, 0);
-
-                // 3. Saldo Líquido
-                const saldo = entradas - saidas;
-
-                // 4. Lucro Estimado = Entradas - CMV (Custo dos itens vendidos) - Despesas Pagas (Excluindo compras de estoque para evitar duplicidade)
-                const closedSalesInPeriod = filteredSales.filter(s => s.status === 'closed');
-                let cmv = 0;
-                closedSalesInPeriod.forEach(sale => {
-                    sale.items.forEach(item => {
-                        cmv += (item.costPrice * item.quantity);
-                    });
-                });
-
-                const operationalExpensesPaid = filteredTx
-                    .filter(t => t.type === 'saida' && !t.description.startsWith('Compra Estoque') && !t.description.startsWith('Restoque'))
-                    .reduce((sum, t) => sum + t.amount, 0);
-
-                const lucroEstimado = entradas - cmv - operationalExpensesPaid;
-
-                return {
-                    entradas,
-                    saidas,
-                    saldo,
-                    lucroEstimado,
-                    cmv,
-                    transactions: filteredTx,
-                    sales: filteredSales
-                };
-            }
-        }
-
-        // ==========================================
-        // 3. CONTROLLER (SamaumaController)
-        // ==========================================
-        let currentActiveSaleId = null;
-        let activeFinanceSubTab = 'contas';
-
-        class SamaumaController {
-            static init() {
-                // Se o banco estiver vazio, carrega dados demo para facilitar a visualização inicial
-                if (SamaumaStore.get('products', []).length === 0) {
-                    SamaumaStore.loadDemoData();
-                }
-                
-                document.getElementById('header-date').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                
-                // Abre o dashboard como página padrão
-                switchTab('dashboard');
-            }
-
-            // --- OPERAÇÕES PRODUTO ---
-            static addOrEditProduct(productData) {
-                try {
-                    SamaumaService.saveProduct(productData);
-                    closeModal('modal-novo-produto');
-                    renderEstoque();
-                    showToast("Produto salvo com sucesso!", "success");
-                } catch (e) {
-                    showToast(e.message, "error");
-                }
-            }
-
-            static removeProduct(id) {
-                if (confirm("Deseja realmente excluir este produto?")) {
-                    try {
-                        SamaumaService.deleteProduct(id);
-                        renderEstoque();
-                        showToast("Produto excluído!", "success");
-                    } catch (e) {
-                        showToast(e.message, "error");
-                    }
-                }
-            }
-
-            // --- ENTRADA / COMPRA ESTOQUE ---
-            static registerPurchase(prodId, qty, cost) {
-                try {
-                    SamaumaService.registerStockPurchase(prodId, qty, cost);
-                    closeModal('modal-entrada-estoque');
-                    renderEstoque();
-                    showToast("Entrada de estoque registrada com sucesso!", "success");
-                } catch (e) {
-                    showToast(e.message, "error");
-                }
-            }
-
-            // --- REGISTRO DE PERDA ESTOQUE ---
-            static registerLoss(prodId, qty, reason) {
-                try {
-                    SamaumaService.registerStockLoss(prodId, qty, reason);
-                    closeModal('modal-perda-estoque');
-                    renderEstoque();
-                    showToast("Baixa por perda cadastrada!", "success");
-                } catch (e) {
-                    showToast(e.message, "error");
-                }
-            }
-
-            // --- POS & VENDAS ---
-            static startNewSale(customerType, customerName) {
-                const newOrder = SamaumaService.openSaleOrder(customerType, customerName);
-                this.loadPOS(newOrder.id);
-            }
-
-            static loadPOS(saleId) {
-                currentActiveSaleId = saleId;
-                
-                document.getElementById('vendas-grid-view').classList.add('hidden');
-                document.getElementById('vendas-pos-view').classList.remove('hidden');
-                
-                renderPOSActiveOrder();
-                renderPOSMenu();
-            }
-
-            static closeActiveOrder() {
-                if (confirm("Deseja fechar a comanda atual e descartar as alterações não salvas?")) {
-                    exitPOS();
-                }
-            }
-        }
-
-
-        // ==========================================
-        // 4. UI VIEWS & RENDERERS (SamaumaUI)
-        // ==========================================
-        let dashboardPeriod = 'mes';
-        let currentMenuCategoryFilter = '';
-        let chartCashflowInstance = null;
-        let chartTopProductsInstance = null;
-
-        function switchTab(tabId) {
-            // Esconde todas as abas
-            document.querySelectorAll('.tab-content').forEach(section => section.classList.add('hidden'));
-            // Mostra a selecionada
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-
-            // Ajusta o design do botão ativo
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('border-samauma-accent', 'text-white', 'bg-samauma-900/60');
-                btn.classList.add('text-samauma-200');
-            });
-            const activeBtn = document.getElementById(`btn-${tabId}`);
-            if (activeBtn) {
-                activeBtn.classList.add('border-samauma-accent', 'text-white', 'bg-samauma-900/60');
-                activeBtn.classList.remove('text-samauma-200');
-            }
-
-            // Chama o renderizador correspondente
-            if (tabId === 'dashboard') renderDashboard();
-            if (tabId === 'vendas') renderVendas();
-            if (tabId === 'estoque') renderEstoque();
-            if (tabId === 'financeiro') renderFinanceiro();
-        }
-
-        // --- DASHBOARD RENDERER ---
-        function changeDashboardPeriod(period) {
-            dashboardPeriod = period;
-            
-            // Estilização do botão de período
-            document.querySelectorAll('.period-btn').forEach(btn => {
-                btn.classList.remove('bg-samauma-700', 'text-white');
-                btn.classList.add('text-slate-600', 'hover:bg-slate-200');
-            });
-            document.getElementById(`filter-${period}`).classList.add('bg-samauma-700', 'text-white');
-            document.getElementById(`filter-${period}`).classList.remove('text-slate-600', 'hover:bg-slate-200');
-
-            if (period === 'custom') {
-                document.getElementById('custom-date-container').classList.remove('hidden');
-            } else {
-                document.getElementById('custom-date-container').classList.add('hidden');
-                renderDashboard();
-            }
-        }
-
-        function applyCustomDates() {
-            const start = document.getElementById('dash-start-date').value;
-            const end = document.getElementById('dash-end-date').value;
-            if (start && end) {
-                renderDashboard();
-            }
-        }
-
-        function renderDashboard() {
-            const start = document.getElementById('dash-start-date').value;
-            const end = document.getElementById('dash-end-date').value;
-            
-            const stats = SamaumaService.getDashboardStats(dashboardPeriod, start, end);
-
-            // Injeta dados nos cartões principais
-            document.getElementById('dash-entradas').innerText = formatCurrency(stats.entradas);
-            document.getElementById('dash-saidas').innerText = formatCurrency(stats.saidas);
-            document.getElementById('dash-saldo').innerText = formatCurrency(stats.saldo);
-            document.getElementById('dash-lucro').innerText = formatCurrency(stats.lucroEstimado);
-
-            // Ajusta badge de margem de lucro
-            const margemLucro = stats.entradas > 0 ? (stats.lucroEstimado / stats.entradas) * 100 : 0;
-            document.getElementById('dash-lucro-badge').innerText = `Lucratividade: ${margemLucro.toFixed(1)}%`;
-            if (stats.lucroEstimado < 0) {
-                document.getElementById('dash-lucro-badge').className = "text-[10px] text-red-800 bg-red-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block";
-            } else {
-                document.getElementById('dash-lucro-badge').className = "text-[10px] text-samauma-800 bg-samauma-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block";
-            }
-
-            // Ajusta o card de saldo em caixa
-            if (stats.saldo < 0) {
-                document.getElementById('dash-saldo').className = "text-2xl font-black text-rose-600 mt-1";
-            } else {
-                document.getElementById('dash-saldo').className = "text-2xl font-black text-slate-800 mt-1";
-            }
-
-            // Alertas de estoque crítico
-            const products = SamaumaStore.get('products', []);
-            const lowStockProducts = products.filter(p => p.stock <= p.minStock);
-            const alertBox = document.getElementById('dashboard-stock-alerts');
-            const alertList = document.getElementById('dashboard-stock-alerts-list');
-            
-            if (lowStockProducts.length > 0) {
-                alertBox.classList.remove('hidden');
-                alertList.innerHTML = lowStockProducts.map(p => `
-                    <div class="bg-white/80 p-2 rounded border border-amber-200 text-xs flex justify-between items-center shadow-sm">
-                        <span class="font-bold text-slate-700">${p.name}</span>
-                        <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-black">
-                            ${p.stock} / min: ${p.minStock} ${p.unit}
-                        </span>
-                    </div>
-                `).join('');
-            } else {
-                alertBox.classList.add('hidden');
-            }
-
-            // Preenche tabelas de resumos no dashboard
-            renderDashboardTables(stats);
-
-            // Renderiza os Gráficos
-            renderDashboardCharts(stats);
-        }
-
-        function renderDashboardTables(stats) {
-            // Contas a Pagar Pendentes
-            const expenses = SamaumaStore.get('expenses', []);
-            const pendingExpenses = expenses.filter(e => e.status === 'pendente')
-                .sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate))
-                .slice(0, 5);
-
-            const pendingBody = document.getElementById('dash-pending-expenses-body');
-            if (pendingExpenses.length > 0) {
-                pendingBody.innerHTML = pendingExpenses.map(e => `
-                    <tr class="border-b border-slate-100 hover:bg-slate-50">
-                        <td class="py-2.5 px-3 font-semibold text-rose-600">${formatDateBR(e.dueDate)}</td>
-                        <td class="py-2.5 px-3 font-medium text-slate-700">${e.description}</td>
-                        <td class="py-2.5 px-3 text-right font-bold text-slate-800">${formatCurrency(e.amount)}</td>
-                        <td class="py-2.5 px-3 text-center">
-                            <button onclick="openModalPagarDespesa('${e.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-2 py-0.5 rounded text-[10px] transition-colors">
-                                Pagar
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                pendingBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Nenhuma despesa pendente!</td></tr>`;
-            }
-
-            // Últimas Vendas Fechadas
-            const sales = SamaumaStore.get('sales', []);
-            const recentSales = sales.filter(s => s.status === 'closed')
-                .sort((a,b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 5);
-
-            const salesBody = document.getElementById('dash-recent-sales-body');
-            if (recentSales.length > 0) {
-                salesBody.innerHTML = recentSales.map(s => `
-                    <tr class="border-b border-slate-100 hover:bg-slate-50">
-                        <td class="py-2.5 px-3 text-slate-400 font-medium">${formatTime(s.date)}</td>
-                        <td class="py-2.5 px-3 font-bold text-slate-700">${s.customerName}</td>
-                        <td class="py-2.5 px-3 text-center font-medium text-slate-500"><i class="fa-solid fa-credit-card text-[10px] mr-1"></i>${s.paymentMethod}</td>
-                        <td class="py-2.5 px-3 text-right font-black text-slate-800">${formatCurrency(s.totalAmount)}</td>
-                    </tr>
-                `).join('');
-            } else {
-                salesBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Nenhuma venda fechada no período.</td></tr>`;
-            }
-        }
-
-        function renderDashboardCharts(stats) {
-            // Chart 1: Fluxo de Caixa Diário (Últimos 10 dias de transações)
-            const transactions = SamaumaStore.get('transactions', []);
-            const last10Days = [];
-            for (let i = 9; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                last10Days.push(d.toISOString().split('T')[0]);
-            }
-
-            const entriesData = Array(10).fill(0);
-            const exitsData = Array(10).fill(0);
-
-            transactions.forEach(tx => {
-                const txDateStr = tx.date.split('T')[0];
-                const dayIdx = last10Days.indexOf(txDateStr);
-                if (dayIdx >= 0) {
-                    if (tx.type === 'entrada') entriesData[dayIdx] += tx.amount;
-                    else exitsData[dayIdx] += tx.amount;
-                }
-            });
-
-            const labels10Days = last10Days.map(dStr => formatDateBR(dStr).substring(0, 5));
-
-            if (chartCashflowInstance) chartCashflowInstance.destroy();
-            const ctx1 = document.getElementById('canvas-cashflow').getContext('2d');
-            chartCashflowInstance = new Chart(ctx1, {
-                type: 'line',
-                data: {
-                    labels: labels10Days,
-                    datasets: [
-                        {
-                            label: 'Entradas (Faturamento)',
-                            data: entriesData,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'Saídas (Custos/Pagamentos)',
-                            data: exitsData,
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
-                    },
-                    scales: {
-                        y: { ticks: { font: { size: 10 } } },
-                        x: { ticks: { font: { size: 10 } } }
-                    }
-                }
-            });
-
-            // Chart 2: Itens Mais Vendidos (Todas as vendas fechadas)
-            const sales = SamaumaStore.get('sales', []);
-            const productSalesQty = {};
-            sales.filter(s => s.status === 'closed').forEach(sale => {
-                sale.items.forEach(item => {
-                    productSalesQty[item.name] = (productSalesQty[item.name] || 0) + item.quantity;
-                });
-            });
-
-            // Ordena e pega os 5 primeiros
-            const sortedProducts = Object.entries(productSalesQty)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
-
-            const topProdLabels = sortedProducts.map(p => p[0]);
-            const topProdQtys = sortedProducts.map(p => p[1]);
-
-            if (chartTopProductsInstance) chartTopProductsInstance.destroy();
-            const ctx2 = document.getElementById('canvas-top-products').getContext('2d');
-            chartTopProductsInstance = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: topProdLabels.length > 0 ? topProdLabels : ['Sem dados'],
-                    datasets: [{
-                        label: 'Unidades Vendidas',
-                        data: topProdQtys.length > 0 ? topProdQtys : [0],
-                        backgroundColor: '#d9a05b',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: { ticks: { font: { size: 10 } }, beginAtZero: true },
-                        y: { ticks: { font: { size: 10 } } }
-                    }
-                }
-            });
-        }
-
-        // --- VENDAS & PDV RENDERERS ---
-        function renderVendas() {
-            const query = document.getElementById('comanda-search').value.toLowerCase();
-            const sales = SamaumaStore.get('sales', []);
-            const openSales = sales.filter(s => s.status === 'open' && s.customerName.toLowerCase().includes(query));
-
-            const grid = document.getElementById('comandas-grid');
-            const emptyState = document.getElementById('empty-comandas-state');
-
-            if (openSales.length > 0) {
-                grid.classList.remove('hidden');
-                emptyState.classList.add('hidden');
-                
-                grid.innerHTML = openSales.map(sale => {
-                    const totalQty = sale.items.reduce((sum, i) => sum + i.quantity, 0);
-                    return `
-                        <div onclick="SamaumaController.loadPOS('${sale.id}')" class="bg-white rounded-xl shadow-sm hover:shadow-md border border-slate-100 hover:border-samauma-300 p-4 flex flex-col justify-between cursor-pointer transition-all duration-200">
-                            <div>
-                                <span class="bg-samauma-100 text-samauma-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${sale.customerType}</span>
-                                <h4 class="text-base font-extrabold text-slate-800 mt-2">${sale.customerName}</h4>
-                                <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-                                    <i class="fa-solid fa-list-check"></i> ${totalQty} ${totalQty === 1 ? 'item' : 'itens'}
-                                </p>
-                            </div>
-                            <div class="mt-4 pt-3 border-t border-slate-50 flex justify-between items-center">
-                                <span class="text-[10px] text-slate-400">${formatTime(sale.date)}</span>
-                                <span class="text-sm font-black text-samauma-775">${formatCurrency(sale.totalAmount)}</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                grid.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-            }
-        }
-
-        function exitPOS() {
-            currentActiveSaleId = null;
-            document.getElementById('vendas-pos-view').classList.add('hidden');
-            document.getElementById('vendas-grid-view').classList.remove('hidden');
-            renderVendas();
-        }
-
-        function cancelActiveOrder() {
-            if (confirm("Deseja realmente CANCELAR esta comanda? Todos os itens adicionados serão perdidos e o atendimento será fechado.")) {
-                SamaumaService.cancelSaleOrder(currentActiveSaleId);
-                showToast("Comanda cancelada com sucesso.", "success");
-                exitPOS();
-            }
-        }
-
-        function renderPOSActiveOrder() {
-            const sales = SamaumaStore.get('sales', []);
-            const sale = sales.find(s => s.id === currentActiveSaleId);
-            if (!sale) return;
-
-            // Injeta dados do cliente
-            document.getElementById('pos-client-type').innerText = sale.customerType;
-            document.getElementById('pos-client-name').innerText = sale.customerName;
-            document.getElementById('pos-open-time').innerText = formatTime(sale.date);
-
-            // Injeta dados de totais
-            document.getElementById('pos-subtotal').innerText = formatCurrency(sale.totalAmount);
-            document.getElementById('pos-total').innerText = formatCurrency(sale.totalAmount);
-
-            const cartContainer = document.getElementById('pos-cart-container');
-            if (sale.items.length === 0) {
-                cartContainer.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-12 text-slate-400">
-                        <i class="fa-solid fa-basket-shopping text-3xl mb-2"></i>
-                        <p class="text-xs">O carrinho de compras está vazio</p>
-                    </div>
-                `;
-            } else {
-                cartContainer.innerHTML = sale.items.map(item => `
-                    <div class="flex justify-between items-center py-2.5 border-b border-slate-50 hover:bg-slate-50 px-1 rounded transition-colors">
-                        <div class="flex-grow pr-2">
-                            <h4 class="text-xs font-bold text-slate-700">${item.name}</h4>
-                            <span class="text-[10px] text-slate-400">${formatCurrency(item.sellPrice)} / unidade</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="flex items-center border border-slate-200 rounded bg-white">
-                                <button onclick="adjustCartQty('${item.productId}', -1)" class="px-2 py-0.5 text-slate-500 hover:bg-slate-100 font-bold text-xs">-</button>
-                                <span class="px-2 text-xs font-black text-slate-700">${item.quantity}</span>
-                                <button onclick="adjustCartQty('${item.productId}', 1)" class="px-2 py-0.5 text-slate-500 hover:bg-slate-100 font-bold text-xs">+</button>
-                            </div>
-                            <button onclick="removeCartItem('${item.productId}')" class="text-red-500 hover:text-red-700 p-1.5" title="Remover item">
-                                <i class="fa-solid fa-trash-can text-xs"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-        }
-
-        function renderPOSMenu() {
-            const query = document.getElementById('pos-menu-search').value.toLowerCase();
-            const products = SamaumaStore.get('products', []);
-            
-            // Filtra produtos válidos para venda (ignora custos unitários brutos de insumos brutos sem preço de venda)
-            const sellableProducts = products.filter(p => p.sellPrice > 0 && p.name.toLowerCase().includes(query) && (currentMenuCategoryFilter === '' || p.category === currentMenuCategoryFilter));
-
-            // Renderizar Abas de Categorias no menu do PDV
-            const categories = ['Todos', 'Bebidas', 'Alimentos', 'Porções', 'Insumos Gerais', 'Outros'];
-            const categoriesContainer = document.getElementById('pos-menu-categories');
-            categoriesContainer.innerHTML = categories.map(cat => {
-                const catValue = cat === 'Todos' ? '' : cat;
-                const activeClass = currentMenuCategoryFilter === catValue ? 'bg-samauma-700 text-white border-samauma-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200';
-                return `<button onclick="filterPOSMenuByCategory('${catValue}')" class="px-3 py-1 text-xs font-bold rounded-lg border transition-all whitespace-nowrap ${activeClass}">${cat}</button>`;
-            }).join('');
-
-            const grid = document.getElementById('pos-menu-products');
-            if (sellableProducts.length > 0) {
-                grid.innerHTML = sellableProducts.map(prod => {
-                    const isLowStock = prod.stock <= prod.minStock;
-                    const isOutOfStock = prod.stock <= 0;
-                    
-                    let badgeClass = "bg-emerald-100 text-emerald-800";
-                    let badgeText = `${prod.stock} ${prod.unit}`;
-                    if (isOutOfStock) {
-                        badgeClass = "bg-red-100 text-red-800";
-                        badgeText = "Esgotado";
-                    } else if (isLowStock) {
-                        badgeClass = "bg-amber-100 text-amber-800";
-                        badgeText = `Baixo: ${prod.stock}`;
-                    }
-
-                    return `
-                        <div class="bg-white p-3 rounded-xl border border-slate-100 flex flex-col justify-between shadow-sm hover:border-samauma-300 transition-colors">
-                            <div>
-                                <div class="flex justify-between items-start gap-1">
-                                    <span class="text-[8px] bg-slate-100 text-slate-500 uppercase px-1.5 py-0.5 rounded font-semibold">${prod.category}</span>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-black ${badgeClass}">${badgeText}</span>
-                                </div>
-                                <h4 class="text-xs font-bold text-slate-800 mt-2 line-clamp-2">${prod.name}</h4>
-                            </div>
-                            <div class="mt-4 flex justify-between items-center pt-2 border-t border-slate-50">
-                                <span class="text-sm font-black text-samauma-800">${formatCurrency(prod.sellPrice)}</span>
-                                <button onclick="addProductToCart('${prod.id}')" ${isOutOfStock ? 'disabled' : ''} class="bg-samauma-600 hover:bg-samauma-700 disabled:bg-slate-200 text-white font-bold p-2 rounded-lg text-xs transition-colors flex items-center justify-center">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                grid.innerHTML = `
-                    <div class="col-span-full bg-white p-8 rounded-xl border border-slate-100 text-center text-slate-400">
-                        Nenhum produto cadastrado nesta categoria.
-                    </div>
-                `;
-            }
-        }
-
-        function filterPOSMenuByCategory(category) {
-            currentMenuCategoryFilter = category;
-            renderPOSMenu();
-        }
-
-        function addProductToCart(productId) {
-            SamaumaService.addProductToSale(currentActiveSaleId, productId, 1);
-            renderPOSActiveOrder();
-        }
-
-        // --- CART ADJUSTMENTS ---
-        function adjustCartQty(productId, delta) {
-            const sales = SamaumaStore.get('sales', []);
-            const sale = sales.find(s => s.id === currentActiveSaleId);
-            if (!sale) return;
-
-            const item = sale.items.find(i => i.productId === productId);
-            if (!item) return;
-
-            SamaumaService.updateCartItemQty(currentActiveSaleId, productId, item.quantity + delta);
-            renderPOSActiveOrder();
-        }
-
-        function removeCartItem(productId) {
-            SamaumaService.removeCartItem(currentActiveSaleId, productId);
-            renderPOSActiveOrder();
-        }
-
-        // --- PAYMENT MODAL TRIGGER ---
-        function openPaymentModal() {
-            const sales = SamaumaStore.get('sales', []);
-            const sale = sales.find(s => s.id === currentActiveSaleId);
-            if (!sale || sale.items.length === 0) {
-                showToast("Não é possível fechar uma comanda vazia.", "warning");
-                return;
-            }
-
-            document.getElementById('payment-modal-total').innerText = formatCurrency(sale.totalAmount);
-            document.getElementById('payment-discount').value = '';
-            document.getElementById('payment-discount-row').classList.add('hidden');
-
-            openModal('modal-pagamento-venda');
-        }
-
-        function recalculatePaymentTotal() {
-            const sales = SamaumaStore.get('sales', []);
-            const sale = sales.find(s => s.id === currentActiveSaleId);
-            if (!sale) return;
-
-            const discount = parseFloat(document.getElementById('payment-discount').value) || 0;
-            const finalVal = Math.max(0, sale.totalAmount - discount);
-
-            document.getElementById('payment-modal-total').innerText = formatCurrency(finalVal);
-
-            const discountRow = document.getElementById('payment-discount-row');
-            if (discount > 0) {
-                discountRow.classList.remove('hidden');
-                document.getElementById('payment-discount-val').innerText = `- ${formatCurrency(discount)}`;
-            } else {
-                discountRow.classList.add('hidden');
-            }
-        }
-
-        function handleFecharVenda(e) {
-            e.preventDefault();
-            const method = document.querySelector('input[name="paymentMethod"]:checked').value;
-            const discount = parseFloat(document.getElementById('payment-discount').value) || 0;
-
-            try {
-                SamaumaService.finalizeSale(currentActiveSaleId, method, discount);
-                closeModal('modal-pagamento-venda');
-                showToast("Venda fechada com sucesso! Estoque atualizado.", "success");
-                exitPOS();
-            } catch (e) {
-                showToast(e.message, "error");
-            }
-        }
-
-
-        // --- ESTOQUE VIEW RENDERER ---
-        function renderEstoque() {
-            const search = document.getElementById('estoque-search').value.toLowerCase();
-            const category = document.getElementById('estoque-filter-category').value;
-            const status = document.getElementById('estoque-filter-status').value;
-
-            const products = SamaumaStore.get('products', []);
-
-            const filtered = products.filter(p => {
-                const matchesSearch = p.name.toLowerCase().includes(search);
-                const matchesCategory = !category || p.category === category;
-                
-                let matchesStatus = true;
-                if (status === 'esgotado') matchesStatus = p.stock <= 0;
-                else if (status === 'baixo') matchesStatus = p.stock <= p.minStock && p.stock > 0;
-                else if (status === 'normal') matchesStatus = p.stock > p.minStock;
-
-                return matchesSearch && matchesCategory && matchesStatus;
-            });
-
-            const tbody = document.getElementById('estoque-table-body');
-            const empty = document.getElementById('empty-estoque-state');
-
-            if (filtered.length > 0) {
-                tbody.classList.remove('hidden');
-                empty.classList.add('hidden');
-
-                tbody.innerHTML = filtered.map(p => {
-                    const isLow = p.stock <= p.minStock;
-                    const isZero = p.stock <= 0;
-                    
-                    let badgeClass = "bg-emerald-100 text-emerald-800";
-                    let badgeText = "Normal";
-                    if (isZero) {
-                        badgeClass = "bg-rose-100 text-rose-800";
-                        badgeText = "Esgotado";
-                    } else if (isLow) {
-                        badgeClass = "bg-amber-100 text-amber-800";
-                        badgeText = "Baixo";
-                    }
-
-                    return `
-                        <tr class="hover:bg-slate-50 border-b border-slate-100">
-                            <td class="py-3 px-4 font-bold text-slate-800">${p.name}</td>
-                            <td class="py-3 px-4 font-medium text-slate-500">${p.category}</td>
-                            <td class="py-3 px-4 text-center font-medium text-slate-500 capitalize">${p.unit}</td>
-                            <td class="py-3 px-4 text-right font-semibold text-slate-700">${formatCurrency(p.costPrice)}</td>
-                            <td class="py-3 px-4 text-right font-black text-samauma-800">${p.sellPrice > 0 ? formatCurrency(p.sellPrice) : '<span class="text-slate-300 font-normal">N/A</span>'}</td>
-                            <td class="py-3 px-4 text-center font-bold text-slate-850">${p.stock}</td>
-                            <td class="py-3 px-4 text-center text-slate-400 font-medium">${p.minStock}</td>
-                            <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 text-[10px] font-black rounded-full ${badgeClass}">${badgeText}</span></td>
-                            <td class="py-3 px-4 text-center">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <button onclick="openModalEditProduct('${p.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition-colors" title="Editar Produto">
-                                        <i class="fa-solid fa-pen text-xs"></i>
-                                    </button>
-                                    <button onclick="SamaumaController.removeProduct('${p.id}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded transition-colors" title="Excluir Produto">
-                                        <i class="fa-solid fa-trash-can text-xs"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            } else {
-                tbody.classList.add('hidden');
-                empty.classList.remove('hidden');
-            }
-
-            // Popula os seletores de produto nos modais de compras e desperdícios
-            populateProductSelects(products);
-        }
-
-        function populateProductSelects(products) {
-            const selectEntrada = document.getElementById('entrada-prod-id');
-            const selectPerda = document.getElementById('perda-prod-id');
-            
-            const options = products.map(p => `<option value="${p.id}">${p.name} (${p.unit})</option>`).join('');
-            
-            selectEntrada.innerHTML = `<option value="">Selecione...</option>` + options;
-            selectPerda.innerHTML = `<option value="">Selecione...</option>` + options;
-        }
-
-        // --- ESTOQUE MODALS LOGIC ---
-        function openModalEditProduct(id) {
-            const products = SamaumaStore.get('products', []);
-            const prod = products.find(p => p.id === id);
-            if (!prod) return;
-
-            document.getElementById('product-modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-samauma-600"></i> Editar Produto`;
-            document.getElementById('btn-save-product').innerText = "Salvar Alterações";
-            
-            document.getElementById('prod-id').value = prod.id;
-            document.getElementById('prod-name').value = prod.name;
-            document.getElementById('prod-category').value = prod.category;
-            document.getElementById('prod-unit').value = prod.unit;
-            document.getElementById('prod-cost-price').value = prod.costPrice;
-            document.getElementById('prod-sell-price').value = prod.sellPrice;
-            
-            // Oculta inicialização de estoque na edição pra evitar adulteração manual
-            document.getElementById('stock-initial-fields').classList.add('hidden');
-            
-            openModal('modal-novo-produto');
-        }
-
-        function updateEntradaHelperInfo() {
-            const prodId = document.getElementById('entrada-prod-id').value;
-            const products = SamaumaStore.get('products', []);
-            const product = products.find(p => p.id === prodId);
-            
-            const container = document.getElementById('entrada-helper-info');
-            const preview = document.getElementById('entrada-avg-cost-preview');
-            
-            if (product) {
-                container.innerHTML = `
-                    <div class="flex justify-between"><span>Estoque Atual:</span> <span class="font-bold text-slate-800">${product.stock} ${product.unit}</span></div>
-                    <div class="flex justify-between mt-1"><span>Custo Atual:</span> <span class="font-bold text-slate-800">${formatCurrency(product.costPrice)}</span></div>
-                `;
-                
-                // Pré-popula o valor de custo unitário com o custo atual cadastrado
-                document.getElementById('entrada-cost-price').value = product.costPrice;
-                
-                // Event listener para cálculo automático
-                const calcFutureCost = () => {
-                    const addedQty = parseFloat(document.getElementById('entrada-qty').value) || 0;
-                    const addedCost = parseFloat(document.getElementById('entrada-cost-price').value) || 0;
-                    if (addedQty > 0) {
-                        const totalStock = product.stock + addedQty;
-                        const avg = ((product.stock * product.costPrice) + (addedQty * addedCost)) / totalStock;
-                        preview.innerText = `Custo Médio Futuro: ${formatCurrency(avg)} / unidade`;
-                        preview.classList.remove('hidden');
-                    } else {
-                        preview.classList.add('hidden');
-                    }
-                };
-                
-                document.getElementById('entrada-qty').oninput = calcFutureCost;
-                document.getElementById('entrada-cost-price').oninput = calcFutureCost;
-                calcFutureCost();
-            } else {
-                container.innerHTML = 'Selecione um produto para visualizar o estoque.';
-                preview.classList.add('hidden');
-            }
-        }
-
-        function updatePerdaHelperInfo() {
-            const prodId = document.getElementById('perda-prod-id').value;
-            const products = SamaumaStore.get('products', []);
-            const product = products.find(p => p.id === prodId);
-            
-            const container = document.getElementById('perda-helper-info');
-            if (product) {
-                container.innerHTML = `
-                    <div class="flex justify-between"><span>Estoque Atual:</span> <span class="font-bold text-slate-850">${product.stock} ${product.unit}</span></div>
-                    <div class="flex justify-between mt-1"><span>Valor Custo Unitário:</span> <span class="font-bold text-slate-850">${formatCurrency(product.costPrice)}</span></div>
-                `;
-                document.getElementById('perda-qty').max = product.stock;
-            } else {
-                container.innerHTML = 'Selecione um produto para visualizar o estoque.';
-            }
-        }
-
-
-        // --- FINANCEIRO VIEW RENDERER ---
-        function switchFinanceSubTab(subTab) {
-            activeFinanceSubTab = subTab;
-            
-            // Tab Header Styling
-            document.getElementById('fin-tab-contas').className = `inline-flex items-center gap-2 p-3 border-b-2 font-bold transition-all ${subTab === 'contas' ? 'text-samauma-800 border-samauma-700' : 'border-transparent text-slate-500 hover:text-slate-600'}`;
-            document.getElementById('fin-tab-extrato').className = `inline-flex items-center gap-2 p-3 border-b-2 font-bold transition-all ${subTab === 'extrato' ? 'text-samauma-800 border-samauma-700' : 'border-transparent text-slate-500 hover:text-slate-600'}`;
-
-            if (subTab === 'contas') {
-                document.getElementById('finance-contas-view').classList.remove('hidden');
-                document.getElementById('finance-extrato-view').classList.add('hidden');
-            } else {
-                document.getElementById('finance-contas-view').classList.add('hidden');
-                document.getElementById('finance-extrato-view').classList.remove('hidden');
-            }
-            renderFinanceiro();
-        }
-
-        function renderFinanceiro() {
-            if (activeFinanceSubTab === 'contas') {
-                renderContasAPagar();
-            } else {
-                renderExtratoCaixa();
-            }
-        }
-
-        function renderContasAPagar() {
-            const query = document.getElementById('despesas-search').value.toLowerCase();
-            const status = document.getElementById('despesas-filter-status').value;
-            const expenses = SamaumaStore.get('expenses', []);
-
-            const filtered = expenses.filter(e => {
-                const matchesQuery = e.description.toLowerCase().includes(query) || e.category.toLowerCase().includes(query);
-                const matchesStatus = !status || e.status === status;
-                return matchesQuery && matchesStatus;
-            }).sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
-
-            const tbody = document.getElementById('despesas-table-body');
-            const empty = document.getElementById('empty-despesas-state');
-
-            if (filtered.length > 0) {
-                tbody.classList.remove('hidden');
-                empty.classList.add('hidden');
-
-                tbody.innerHTML = filtered.map(e => {
-                    const isPaid = e.status === 'paga';
-                    const badgeClass = isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
-                    
-                    return `
-                        <tr class="hover:bg-slate-50 border-b border-slate-100">
-                            <td class="py-3 px-4 font-bold text-slate-700">${formatDateBR(e.dueDate)}</td>
-                            <td class="py-3 px-4 font-medium text-slate-400">${e.payDate ? formatDateBR(e.payDate) : '-'}</td>
-                            <td class="py-3 px-4 font-medium text-slate-500">${e.category}</td>
-                            <td class="py-3 px-4 font-bold text-slate-800">${e.description}</td>
-                            <td class="py-3 px-4 text-right font-black text-rose-600">${formatCurrency(e.amount)}</td>
-                            <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 text-[10px] font-black rounded-full ${badgeClass} capitalize">${e.status}</span></td>
-                            <td class="py-3 px-4 text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    ${!isPaid ? `
-                                        <button onclick="openModalPagarDespesa('${e.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-2 py-1 rounded text-xs transition-colors flex items-center gap-1 shadow-sm">
-                                            <i class="fa-solid fa-check"></i> Pagar
-                                        </button>
-                                    ` : ''}
-                                    <button onclick="handleExcluirDespesa('${e.id}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded transition-colors" title="Excluir Despesa">
-                                        <i class="fa-solid fa-trash-can text-xs"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            } else {
-                tbody.classList.add('hidden');
-                empty.classList.remove('hidden');
-            }
-        }
-
-        function renderExtratoCaixa() {
-            const query = document.getElementById('extrato-search').value.toLowerCase();
-            const type = document.getElementById('extrato-filter-type').value;
-            const transactions = SamaumaStore.get('transactions', []);
-
-            const filtered = transactions.filter(t => {
-                const matchesQuery = t.description.toLowerCase().includes(query) || t.category.toLowerCase().includes(query);
-                const matchesType = !type || t.type === type;
-                return matchesQuery && matchesType;
-            }).sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            const tbody = document.getElementById('extrato-table-body');
-            const empty = document.getElementById('empty-extrato-state');
-
-            if (filtered.length > 0) {
-                tbody.classList.remove('hidden');
-                empty.classList.add('hidden');
-
-                tbody.innerHTML = filtered.map(t => {
-                    const isEntry = t.type === 'entrada';
-                    const valueClass = isEntry ? 'text-emerald-600' : 'text-rose-600';
-                    const icon = isEntry ? '<i class="fa-solid fa-circle-arrow-up text-emerald-500 mr-1.5"></i>' : '<i class="fa-solid fa-circle-arrow-down text-rose-500 mr-1.5"></i>';
-                    
-                    return `
-                        <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs">
-                            <td class="py-3 px-4 text-slate-400 font-semibold">${formatDateTime(t.date)}</td>
-                            <td class="py-3 px-4 font-bold flex items-center">${icon} ${isEntry ? 'Entrada' : 'Saída'}</td>
-                            <td class="py-3 px-4 font-medium text-slate-500">${t.category}</td>
-                            <td class="py-3 px-4 font-bold text-slate-800">${t.description}</td>
-                            <td class="py-3 px-4 text-center font-semibold text-slate-600">${t.paymentMethod || '-'}</td>
-                            <td class="py-3 px-4 text-right font-black ${valueClass}">${isEntry ? '+' : '-'} ${formatCurrency(t.amount)}</td>
-                            <td class="py-3 px-4 text-center">
-                                <button onclick="handleExcluirTransacao('${t.id}')" class="text-slate-400 hover:text-rose-600 p-1.5 rounded transition-colors" title="Excluir Lançamento">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            } else {
-                tbody.classList.add('hidden');
-                empty.classList.remove('hidden');
-            }
-        }
-
-        // --- EXTRATO & DESPESAS EVENTS ---
-        function toggleDespesaPagamentoCampos() {
-            const status = document.getElementById('despesa-status').value;
-            const container = document.getElementById('despesa-paga-campos');
-            
-            if (status === 'paga') {
-                container.classList.remove('hidden');
-                document.getElementById('despesa-pay-date').value = new Date().toISOString().split('T')[0];
-                document.getElementById('despesa-pay-date').required = true;
-            } else {
-                container.classList.add('hidden');
-                document.getElementById('despesa-pay-date').required = false;
-            }
-        }
-
-        function openModalPagarDespesa(expenseId) {
-            const expenses = SamaumaStore.get('expenses', []);
-            const exp = expenses.find(e => e.id === expenseId);
-            if (!exp) return;
-
-            document.getElementById('pagar-despesa-id').value = exp.id;
-            document.getElementById('pagar-despesa-desc').innerText = exp.description;
-            document.getElementById('pagar-despesa-amount').innerText = formatCurrency(exp.amount);
-            document.getElementById('pagar-date').value = new Date().toISOString().split('T')[0];
-
-            openModal('modal-pagar-despesa');
-        }
-
-        function handleExcluirDespesa(id) {
-            if (confirm("Ao excluir esta despesa, qualquer pagamento ou lançamento de caixa gerado por ela também será excluído definitivamente. Continuar?")) {
-                SamaumaService.deleteExpense(id);
-                renderFinanceiro();
-                showToast("Despesa removida!", "success");
-            }
-        }
-
-        function handleExcluirTransacao(id) {
-            if (confirm("Deseja realmente excluir este lançamento? Esta ação pode distorcer seus relatórios financeiros caso a transação corresponda a uma venda ou despesa concluída.")) {
-                const transactions = SamaumaStore.get('transactions', []);
-                const filtered = transactions.filter(t => t.id !== id);
-                SamaumaStore.set('transactions', filtered);
-                renderFinanceiro();
-                showToast("Lançamento excluído com sucesso.", "success");
-            }
-        }
-
-
-        // ==========================================
-        // 5. UTILS, FORM SUBMITS & IMPORT/EXPORT
-        // ==========================================
-        
-        // --- PORTABILIDADE (BACKUP JSON) ---
-        function exportDatabase() {
-            const data = {
-                version: "1.0.0",
-                timestamp: new Date().toISOString(),
-                products: SamaumaStore.get('products'),
-                sales: SamaumaStore.get('sales'),
-                expenses: SamaumaStore.get('expenses'),
-                transactions: SamaumaStore.get('transactions')
-            };
-
-            const jsonStr = JSON.stringify(data, null, 2);
-            const blob = new Blob([jsonStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            const dateStr = new Date().toISOString().split('T')[0];
-            a.download = `samauma_backup_${dateStr}.json`;
-            a.href = url;
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast("Backup gerado e baixado!", "success");
-        }
-
-        function importDatabase(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (!confirm("⚠️ ATENÇÃO: Importar este backup substituirá COMPLETAMENTE todos os seus dados atuais neste navegador. Deseja prosseguir?")) {
-                event.target.value = ''; // reseta input
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    // Validação simples de estrutura
-                    if (data.products && data.expenses && data.sales && data.transactions) {
-                        SamaumaStore.set('products', data.products);
-                        SamaumaStore.set('expenses', data.expenses);
-                        SamaumaStore.set('sales', data.sales);
-                        SamaumaStore.set('transactions', data.transactions);
-                        
-                        showToast("Backup importado com sucesso! Recarregando sistema...", "success");
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        throw new Error("Arquivo de backup inválido.");
-                    }
-                } catch (err) {
-                    showToast(`Falha na importação: ${err.message}`, "error");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // --- EXPORTAR CSV ---
-        function exportReportCSV(type) {
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            let filename = `relatorio_${type}.csv`;
-
-            if (type === 'produtos') {
-                csvContent += "Nome;Categoria;Unidade;Preco Custo;Preco Venda;Estoque Atual;Estoque Minimo\n";
-                const products = SamaumaStore.get('products');
-                products.forEach(p => {
-                    csvContent += `"${p.name}";"${p.category}";"${p.unit}";${p.costPrice.toString().replace('.', ',')};${p.sellPrice.toString().replace('.', ',')};${p.stock};${p.minStock}\n`;
-                });
-            } else if (type === 'vendas') {
-                csvContent += "ID Venda;Data;Cliente/Mesa;Metodo Pagamento;Total Venda;Qtd Itens\n";
-                const sales = SamaumaStore.get('sales').filter(s => s.status === 'closed');
-                sales.forEach(s => {
-                    const qty = s.items.reduce((sum, i) => sum + i.quantity, 0);
-                    csvContent += `"${s.id}";"${formatDateTime(s.date)}";"${s.customerName}";"${s.paymentMethod}";${s.totalAmount.toString().replace('.', ',')};${qty}\n`;
-                });
-            } else if (type === 'despesas') {
-                csvContent += "Vencimento;Pagamento;Categoria;Descricao;Valor;Status\n";
-                const expenses = SamaumaStore.get('expenses');
-                expenses.forEach(e => {
-                    csvContent += `"${formatDateBR(e.dueDate)}";"${e.payDate ? formatDateBR(e.payDate) : '-'}";"${e.category}";"${e.description}";${e.amount.toString().replace('.', ',')};"${e.status}"\n`;
-                });
-            } else if (type === 'transacoes') {
-                csvContent += "Data/Hora;Tipo;Categoria;Descricao;Metodo Pagamento;Valor\n";
-                const transactions = SamaumaStore.get('transactions');
-                transactions.forEach(t => {
-                    csvContent += `"${formatDateTime(t.date)}";"${t.type}";"${t.category}";"${t.description}";"${t.paymentMethod || '-'}";${t.amount.toString().replace('.', ',')}\n`;
-                });
-            }
-
-            const encodedUri = encodeURI(csvContent);
-            const a = document.createElement('a');
-            a.setAttribute("href", encodedUri);
-            a.setAttribute("download", filename);
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            showToast("Relatório gerado!", "success");
-        }
-
-        // --- ZONA DE PERIGO / RESET ---
-        function resetToDemoData() {
-            if (confirm("Isso redefinirá todas as suas alterações atuais para os dados padrão de demonstração. Deseja prosseguir?")) {
-                SamaumaStore.clearAll();
-                SamaumaStore.loadDemoData();
-                showToast("Base de dados restaurada para demonstração!", "success");
-                setTimeout(() => location.reload(), 1000);
-            }
-        }
-
-        // Apagar todos os dados
-        function clearDatabase() {
-            if (confirm("⚠️ ALERTA MÁXIMO: Esta ação irá deletar TODOS os dados operacionais e financeiros sem possibilidade de recuperação. Tem certeza disso?")) {
-                if (confirm("Última chance: Clique em OK para APAGAR TUDO ou Cancelar para desistir.")) {
-                    SamaumaStore.clearAll();
-                    showToast("Banco de dados apagado por completo.", "success");
-                    setTimeout(() => location.reload(), 1000);
-                }
-            }
-        }
-
-        // --- FORM HANDLERS ---
-        function handleAbrirComanda(e) {
-            e.preventDefault();
-            const type = document.querySelector('input[name="customerType"]:checked').value;
-            const name = document.getElementById('comanda-number-name').value.trim();
-
-            if (!name) return;
-
-            SamaumaController.startNewSale(type, name);
-            closeModal('modal-abrir-comanda');
-            document.getElementById('comanda-number-name').value = '';
-            showToast("Atendimento aberto!", "success");
-        }
-
-        function handleNovoProduto(e) {
-            e.preventDefault();
-            const id = document.getElementById('prod-id').value || null;
-            const name = document.getElementById('prod-name').value.trim();
-            const category = document.getElementById('prod-category').value;
-            const unit = document.getElementById('prod-unit').value;
-            const cost = parseFloat(document.getElementById('prod-cost-price').value) || 0;
-            const sell = parseFloat(document.getElementById('prod-sell-price').value) || 0;
-            const stock = parseFloat(document.getElementById('prod-stock').value) || 0;
-            const minStock = parseFloat(document.getElementById('prod-min-stock').value) || 0;
-
-            const product = {
-                id, name, category, unit, costPrice: cost, sellPrice: sell, stock, minStock
-            };
-
-            SamaumaController.addOrEditProduct(product);
-        }
-
-        function handleEntradaEstoque(e) {
-            e.preventDefault();
-            const prodId = document.getElementById('entrada-prod-id').value;
-            const qty = parseFloat(document.getElementById('entrada-qty').value) || 0;
-            const cost = parseFloat(document.getElementById('entrada-cost-price').value) || 0;
-
-            if (!prodId || qty <= 0 || cost < 0) {
-                showToast("Preencha todos os campos obrigatórios.", "error");
-                return;
-            }
-
-            SamaumaController.registerPurchase(prodId, qty, cost);
-            
-            // Reseta form
-            document.getElementById('entrada-prod-id').value = '';
-            document.getElementById('entrada-qty').value = '';
-            document.getElementById('entrada-cost-price').value = '';
-        }
-
-        function handlePerdaEstoque(e) {
-            e.preventDefault();
-            const prodId = document.getElementById('perda-prod-id').value;
-            const qty = parseFloat(document.getElementById('perda-qty').value) || 0;
-            const reason = document.getElementById('perda-reason').value;
-
-            if (!prodId || qty <= 0 || !reason) {
-                showToast("Dados inválidos.", "error");
-                return;
-            }
-
-            SamaumaController.registerLoss(prodId, qty, reason);
-
-            // Reseta form
-            document.getElementById('perda-prod-id').value = '';
-            document.getElementById('perda-qty').value = '';
-        }
-
-        function handleNovaDespesa(e) {
-            e.preventDefault();
-            const desc = document.getElementById('despesa-desc').value.trim();
-            const category = document.getElementById('despesa-category').value;
-            const amount = parseFloat(document.getElementById('despesa-amount').value) || 0;
-            const dueDate = document.getElementById('despesa-due-date').value;
-            const status = document.getElementById('despesa-status').value;
-
-            const expense = {
-                desc, category, amount, dueDate, status, description: desc
-            };
-
-            if (status === 'paga') {
-                expense.payMethod = document.getElementById('despesa-pay-method').value;
-                expense.payDate = document.getElementById('despesa-pay-date').value;
-            } else {
-                expense.payMethod = '';
-                expense.payDate = '';
-            }
-
-            try {
-                SamaumaService.saveExpense(expense);
-                closeModal('modal-nova-despesa');
-                renderFinanceiro();
-                showToast("Despesa cadastrada com sucesso!", "success");
-
-                // Limpa o formulário
-                document.getElementById('despesa-desc').value = '';
-                document.getElementById('despesa-amount').value = '';
-                document.getElementById('despesa-due-date').value = '';
-                document.getElementById('despesa-status').value = 'pendente';
-                toggleDespesaPagamentoCampos();
-            } catch (err) {
-                showToast(err.message, "error");
-            }
-        }
-
-        // Confirmação de despesas
-        function handlePagarDespesa(e) {
-            e.preventDefault();
-            const id = document.getElementById('pagar-despesa-id').value;
-            const date = document.getElementById('pagar-date').value;
-            const method = document.getElementById('pagar-method').value;
-
-            try {
-                SamaumaService.payPendingExpense(id, date, method);
-                closeModal('modal-pagar-despesa');
-                renderFinanceiro();
-                showToast("Pagamento de despesa registrado com sucesso!", "success");
-            } catch (err) {
-                showToast(err.message, "error");
-            }
-        }
-
-        // --- FORMATADORES DE DADOS ---
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-        }
-
-        function formatDateBR(dateStr) {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-');
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
-        function formatDateTime(isoString) {
-            if (!isoString) return '';
-            const d = new Date(isoString);
-            return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        // Hora simples
-        function formatTime(isoString) {
-            if (!isoString) return '--:--';
-            const d = new Date(isoString);
-            return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        // --- GERENCIADOR DE MODAIS ---
-        function openModal(id) {
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.getElementById(id).classList.remove('hidden');
-            
-            // Tratativa específica para produtos (reinicializa título ao abrir novo produto)
-            if (id === 'modal-novo-produto' && !document.getElementById('prod-id').value) {
-                document.getElementById('product-modal-title').innerHTML = `<i class="fa-solid fa-box-open text-samauma-600"></i> Cadastrar Novo Produto`;
-                document.getElementById('btn-save-product').innerText = "Cadastrar Produto";
-                document.getElementById('stock-initial-fields').classList.remove('hidden');
-                
-                // Reseta inputs
-                document.getElementById('prod-id').value = '';
-                document.getElementById('prod-name').value = '';
-                document.getElementById('prod-cost-price').value = '';
-                document.getElementById('prod-sell-price').value = '';
-                document.getElementById('prod-stock').value = 0;
-            }
-        }
-
-        function closeModal(id) {
-            document.getElementById('modal-backdrop').classList.add('hidden');
-            document.getElementById(id).classList.add('hidden');
-            
-            // Reseta inputs ocultos ao fechar modal de produtos
-            if (id === 'modal-novo-produto') {
-                document.getElementById('prod-id').value = '';
-            }
-        }
-
-        // Fecha modais ao clicar no backdrop
-        document.getElementById('modal-backdrop').addEventListener('click', () => {
-            document.querySelectorAll('.modal').forEach(modal => {
-                if (!modal.classList.contains('hidden')) {
-                    closeModal(modal.id);
-                }
-            });
-        });
-
-        // --- SISTEMA DE TOAST NOTIFICATIONS ---
-        function showToast(message, type = 'success') {
-            let toast = document.getElementById('app-toast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'app-toast';
-                toast.className = 'fixed bottom-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white font-bold text-xs flex items-center gap-2 transform translate-y-12 opacity-0 transition-all duration-300';
-                document.body.appendChild(toast);
-            }
-
-            const colors = {
-                success: 'bg-emerald-600 border border-emerald-500',
-                error: 'bg-rose-600 border border-rose-500',
-                warning: 'bg-amber-600 border border-amber-500',
-                info: 'bg-blue-600 border border-blue-500'
-            };
-
-            const icons = {
-                success: '<i class="fa-solid fa-circle-check"></i>',
-                error: '<i class="fa-solid fa-triangle-exclamation"></i>',
-                warning: '<i class="fa-solid fa-circle-exclamation"></i>',
-                info: '<i class="fa-solid fa-info"></i>'
-            };
-
-            toast.className = `fixed bottom-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white font-bold text-xs flex items-center gap-2 transform translate-y-0 opacity-100 transition-all duration-300 ${colors[type]}`;
-            toast.innerHTML = `${icons[type]} <span>${message}</span>`;
-
-            setTimeout(() => {
-                toast.className = 'fixed bottom-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white font-bold text-xs flex items-center gap-2 transform translate-y-12 opacity-0 transition-all duration-300';
-            }, 3000);
-        }
-
-        // Inicializa o app ao carregar a janela
-        window.onload = SamaumaController.init;
-    </script>
+          </li>
+        `;
+      }).join('');
+      document.getElementById('carrinho-total').innerText = `R$ ${total.toFixed(2)}`;
+    }
+
+    function removerDoCarrinho(index) {
+      state.carrinho.splice(index, 1);
+      renderCarrinho();
+    }
+
+    async function finalizarVenda() {
+      if (state.carrinho.length === 0) return alert("O carrinho está vazio!");
+      
+      const cliente = document.getElementById('venda-cliente').value.trim() || 'Balcão/Geral';
+      const pagamento = document.getElementById('venda-pagamento').value;
+      const total = state.carrinho.reduce((acc, i) => acc + i.subtotal, 0);
+      const custoTotal = state.carrinho.reduce((acc, i) => acc + i.custoTotal, 0);
+
+      await db.from('vendas').insert([{
+        cliente,
+        pagamento,
+        total,
+        lucro: total - custoTotal,
+        itens: state.carrinho
+      }]);
+
+      for (const item of state.carrinho) {
+        const novoEstoque = item.qtd - item.qtdVenda;
+        await db.from('produtos').update({ qtd: novoEstoque }).eq('id', item.id);
+      }
+
+      state.carrinho = [];
+      document.getElementById('venda-cliente').value = '';
+      renderCarrinho();
+      carregarTudo();
+      alert("Venda realizada e sincronizada na nuvem!");
+    }
+
+    async function lancarDespesa() {
+      const desc = document.getElementById('desp-desc').value.trim();
+      const valor = parseFloat(document.getElementById('desp-valor').value) || 0;
+      if (!desc || valor <= 0) return alert("Informe descrição e valor válido!");
+
+      await db.from('despesas').insert([{ descricao: desc, valor }]);
+
+      document.getElementById('desp-desc').value = '';
+      document.getElementById('desp-valor').value = '';
+      carregarTudo();
+    }
+
+    function renderFinanceiro() {
+      const totalEntradas = state.vendas.reduce((acc, v) => acc + Number(v.total), 0);
+      const totalDespesas = state.despesas.reduce((acc, d) => acc + Number(d.valor), 0);
+      const lucroLiquido = totalEntradas - totalDespesas;
+
+      document.getElementById('card-entradas').innerText = `R$ ${totalEntradas.toFixed(2)}`;
+      document.getElementById('card-saidas').innerText = `R$ ${totalDespesas.toFixed(2)}`;
+      document.getElementById('card-lucro').innerText = `R$ ${lucroLiquido.toFixed(2)}`;
+
+      const historico = document.getElementById('lista-historico');
+      const registros = [
+        ...state.vendas.map(v => ({ data: new Date(v.created_at).toLocaleString('pt-BR'), desc: `Venda (${v.cliente}) [${v.pagamento}]`, valor: Number(v.total), tipo: 'in' })),
+        ...state.despesas.map(d => ({ data: new Date(d.created_at).toLocaleString('pt-BR'), desc: `Despesa: ${d.descricao}`, valor: Number(d.valor), tipo: 'out' }))
+      ];
+
+      if (registros.length === 0) {
+        historico.innerHTML = `<li class="py-2 text-slate-500 text-center">Nenhuma movimentação registrada</li>`;
+        return;
+      }
+
+      historico.innerHTML = registros.map(r => `
+        <li class="py-2 flex justify-between items-center">
+          <div>
+            <p class="font-medium ${r.tipo === 'in' ? 'text-blue-400' : 'text-rose-400'}">${r.desc}</p>
+            <span class="text-slate-500 text-[10px]">${r.data}</span>
+          </div>
+          <span class="font-bold ${r.tipo === 'in' ? 'text-blue-400' : 'text-rose-400'}">
+            ${r.tipo === 'in' ? '+' : '-'} R$ ${r.valor.toFixed(2)}
+          </span>
+        </li>
+      `).join('');
+    }
+
+    function renderTudo() {
+      renderProdutosSelect();
+      renderTabelaEstoque();
+      renderFinanceiro();
+    }
+
+    carregarTudo();
+  </script>
 </body>
 </html>
