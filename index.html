@@ -40,7 +40,7 @@
 <script>
   const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_XXXXXXXXXXXXXXXXXXXXXX';
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 </script>
     <style>
         .custom-scrollbar::-webkit-scrollbar {
@@ -181,13 +181,13 @@
                             <i class="fa-solid fa-circle-arrow-down"></i> Custos Pagos
                         </span>
                     </div>
-                    <div class="bg-red-50 text-red-600 p-3.5 rounded-xl">
+                    <div class="bg-amber-50 text-amber-600 p-3.5 rounded-xl">
                         <i class="fa-solid fa-receipt text-2xl"></i>
                     </div>
                 </div>
 
                 <!-- Saldo Líquido Card -->
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-cyan-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300">
+                <div class="bg-amber-50 rounded-xl shadow-sm border-l-4 border-amber-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300">
                     <div>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Saldo em Caixa</p>
                         <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-saldo">R$ 0,00</h3>
@@ -201,7 +201,7 @@
                 </div>
 
                 <!-- Lucro Estimado Card -->
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-samauma-accent p-4 flex justify-between items-center hover:shadow-md transition-all duration-300 group">
+                <div class="bg-amber-50 text-amber-600 border-l-4 border-amber-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300 group">
                     <div>
                         <div class="flex items-center gap-1.5">
                             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Lucro Operacional</p>
@@ -210,11 +210,11 @@
                             </span>
                         </div>
                         <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-lucro">R$ 0,00</h3>
-                        <span id="dash-lucro-badge" class="text-[10px] text-samauma-800 bg-samauma-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
+                        <span id="dash-lucro-badge" class="text-[10px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
                             Lucratividade: 0%
                         </span>
                     </div>
-                    <div class="bg-samauma-100 text-samauma-700 p-3.5 rounded-xl group-hover:bg-samauma-200 transition-colors">
+                    <div class="bg-amber-100 text-amber-600 p-3.5 rounded-xl group-hover:bg-amber-200 transition-colors">
                         <i class="fa-solid fa-hand-holding-dollar text-2xl"></i>
                     </div>
                 </div>
@@ -2925,7 +2925,7 @@
 
 // Initialize app with Supabase auth
 async function checkAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabaseClient.auth.getSession();
   if (session) {
     document.getElementById('login-modal').classList.add('hidden');
     document.getElementById('app-content').classList.remove('hidden');
@@ -2940,7 +2940,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) {
     const errEl = document.getElementById('login-error');
     errEl.textContent = error.message;
@@ -2957,7 +2957,7 @@ function addLogoutButton() {
   btn.textContent = 'Sair';
   btn.className = 'ml-4 text-xs text-slate-300 hover:text-white';
   btn.onclick = async () => {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     await checkAuth();
   };
   header.appendChild(btn);
