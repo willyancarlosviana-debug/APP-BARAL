@@ -3,38 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Balneário Samaúma - Gestão Nuvem</title>
+    <title>Samaúma - Gestão Nuvem</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        samauma: {
+                            50: '#f2f7f3', 100: '#e1ede3', 200: '#c5dac9', 300: '#9cbdc3',
+                            400: '#759b7d', 500: '#537d5c', 600: '#3e6246', 700: '#325039',
+                            800: '#263f2d', 900: '#1d3224', 950: '#0e1b12', accent: '#d9a05b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800 min-h-screen flex flex-col">
+<body class="bg-samauma-50 font-sans text-slate-800 min-h-screen flex flex-col">
 
     <!-- HEADER -->
-    <header class="bg-indigo-950 text-white shadow-md sticky top-0 z-30">
+    <header class="bg-samauma-950 text-white shadow-md sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex flex-col md:flex-row justify-between items-center py-3 gap-4">
                 <div class="flex items-center gap-3">
+                    <div class="h-12 w-12 rounded-full overflow-hidden flex items-center justify-center border border-samauma-500 shadow-inner bg-white">
+                        <img src="Logo definida.jpeg" alt="Logo Balneário" class="h-full w-full object-cover" onerror="this.src='https://via.placeholder.com/150?text=Logo'">
+                    </div>
                     <div>
-                        <h1 class="text-xl font-bold tracking-wider text-indigo-100 flex items-center gap-2">
-                            <i class="fa-solid fa-tree text-indigo-400"></i> BALNEÁRIO SAMAÚMA
+                        <h1 class="text-xl font-bold tracking-wider text-samauma-100 flex items-center gap-2">
+                            BALNEÁRIO SAMAÚMA
                         </h1>
-                        <p class="text-xs text-indigo-300">Gestão Operacional & Financeira na Nuvem</p>
+                        <p class="text-xs text-samauma-300">Gestão Integrada em Nuvem</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3 text-xs">
-                    <span class="bg-indigo-900 border border-indigo-700 text-indigo-200 px-3 py-1 rounded-full flex items-center gap-2 font-medium">
-                        <span class="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span> Online (Supabase)
+                <div class="flex items-center gap-3 text-xs md:text-sm">
+                    <span class="bg-samauma-900 border border-samauma-700 text-samauma-200 px-3 py-1 rounded-full flex items-center gap-2 font-medium">
+                        <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> Online (Sincronizado)
                     </span>
                 </div>
             </div>
             
-            <nav class="flex overflow-x-auto border-t border-indigo-800">
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="py-3 px-4 flex items-center gap-2 font-medium text-sm border-b-2 border-blue-400 text-white bg-indigo-900/50"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
-                <button onclick="switchTab('vendas')" id="btn-vendas" class="py-3 px-4 flex items-center gap-2 font-medium text-sm border-b-2 border-transparent text-indigo-200 hover:text-white"><i class="fa-solid fa-cash-register"></i> Vendas</button>
-                <button onclick="switchTab('estoque')" id="btn-estoque" class="py-3 px-4 flex items-center gap-2 font-medium text-sm border-b-2 border-transparent text-indigo-200 hover:text-white"><i class="fa-solid fa-boxes-stacked"></i> Estoque</button>
-                <button onclick="switchTab('financeiro')" id="btn-financeiro" class="py-3 px-4 flex items-center gap-2 font-medium text-sm border-b-2 border-transparent text-indigo-200 hover:text-white"><i class="fa-solid fa-money-bill-transfer"></i> Financeiro</button>
+            <nav class="flex overflow-x-auto border-t border-samauma-800 custom-scrollbar">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="py-3 px-4 flex items-center gap-2 font-medium text-sm border-b-2 border-samauma-accent text-white bg-samauma-900/60 whitespace-nowrap"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+                <button onclick="switchTab('vendas')" id="btn-vendas" class="py-3 px-4 flex items-center gap-2 font-medium text-sm border-b-2 border-transparent text-samauma-200 hover:text-white whitespace-nowrap"><i class="fa-solid fa-cash-register"></i> Vendas / PDV</button>
+                <button onclick="switchTab('estoque')" id="btn-estoque" class="py-3 px-4 flex items-center gap-2 font-medium text-sm border-b-2 border-transparent text-samauma-200 hover:text-white whitespace-nowrap"><i class="fa-solid fa-boxes-stacked"></i> Estoque</button>
+                <button onclick="switchTab('financeiro')" id="btn-financeiro" class="py-3 px-4 flex items-center gap-2 font-medium text-sm border-b-2 border-transparent text-samauma-200 hover:text-white whitespace-nowrap"><i class="fa-solid fa-money-bill-transfer"></i> Financeiro</button>
             </nav>
         </div>
     </header>
@@ -43,12 +60,16 @@
 
         <!-- 1. DASHBOARD -->
         <section id="tab-dashboard" class="tab-content space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-4">
+                <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-square-poll-vertical text-samauma-600"></i> Indicadores de Desempenho</h2>
+                <p class="text-xs text-slate-500">Acompanhamento financeiro em tempo real</p>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white rounded-xl shadow-sm border-l-4 border-emerald-500 p-4">
                     <p class="text-xs font-bold text-slate-400 uppercase">Faturamento (Entradas)</p>
                     <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-entradas">R$ 0,00</h3>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-500 p-4">
+                <div class="bg-white rounded-xl shadow-sm border-l-4 border-rose-500 p-4">
                     <p class="text-xs font-bold text-slate-400 uppercase">Saídas & Despesas</p>
                     <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-saidas">R$ 0,00</h3>
                 </div>
@@ -56,42 +77,42 @@
                     <p class="text-xs font-bold text-slate-400 uppercase">Saldo em Caixa</p>
                     <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-saldo">R$ 0,00</h3>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-indigo-500 p-4">
+                <div class="bg-white rounded-xl shadow-sm border-l-4 border-samauma-accent p-4">
                     <p class="text-xs font-bold text-slate-400 uppercase">Lucro Operacional</p>
                     <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-lucro">R$ 0,00</h3>
                 </div>
             </div>
         </section>
 
-        <!-- 2. VENDAS -->
+        <!-- 2. VENDAS / PDV -->
         <section id="tab-vendas" class="tab-content hidden space-y-6">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6">
                 <!-- PDV Carrinho -->
                 <div class="w-full md:w-1/3 flex flex-col border-r md:pr-4">
-                    <h2 class="font-bold text-lg text-indigo-900 mb-3"><i class="fa-solid fa-cart-arrow-down"></i> Nova Venda</h2>
-                    <input type="text" id="venda-cliente" placeholder="Mesa / Cliente" class="w-full mb-2 p-2 border rounded text-sm">
-                    <select id="venda-pagamento" class="w-full mb-3 p-2 border rounded text-sm">
+                    <h2 class="font-bold text-lg text-samauma-800 mb-3"><i class="fa-solid fa-cart-arrow-down"></i> Nova Venda</h2>
+                    <input type="text" id="venda-cliente" placeholder="Mesa / Cliente" class="w-full mb-2 p-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-samauma-500">
+                    <select id="venda-pagamento" class="w-full mb-3 p-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-samauma-500">
                         <option value="PIX">PIX</option>
                         <option value="Dinheiro">Dinheiro</option>
                         <option value="Cartão de Débito">Cartão de Débito</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
                     </select>
                     
-                    <div class="flex-grow overflow-y-auto max-h-[300px] border rounded p-2 mb-3 bg-slate-50" id="carrinho-lista">
+                    <div class="flex-grow overflow-y-auto min-h-[250px] max-h-[300px] border border-slate-200 rounded p-2 mb-3 bg-slate-50" id="carrinho-lista">
                         <p class="text-xs text-center text-slate-400 mt-4">Carrinho vazio</p>
                     </div>
                     
-                    <div class="flex justify-between font-bold text-lg mb-3">
-                        <span>Total:</span>
-                        <span id="carrinho-total" class="text-indigo-600">R$ 0,00</span>
+                    <div class="flex justify-between font-bold text-lg mb-3 pt-2 border-t border-slate-200">
+                        <span class="text-slate-700">Total:</span>
+                        <span id="carrinho-total" class="text-samauma-700">R$ 0,00</span>
                     </div>
-                    <button onclick="finalizarVenda()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow"><i class="fa-solid fa-check"></i> Fechar Venda</button>
+                    <button onclick="finalizarVenda()" class="w-full bg-samauma-600 hover:bg-samauma-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors"><i class="fa-solid fa-check"></i> Fechar Venda</button>
                 </div>
                 
                 <!-- PDV Produtos -->
                 <div class="w-full md:w-2/3">
-                    <input type="text" id="venda-busca" oninput="renderCardapio()" placeholder="Buscar produto..." class="w-full mb-4 p-2 border rounded text-sm">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" id="cardapio-grid">
+                    <input type="text" id="venda-busca" oninput="renderCardapio()" placeholder="Buscar produto..." class="w-full mb-4 p-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-samauma-500">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto max-h-[450px] pr-2" id="cardapio-grid">
                         <!-- Produtos carregados aqui -->
                     </div>
                 </div>
@@ -101,33 +122,34 @@
         <!-- 3. ESTOQUE -->
         <section id="tab-estoque" class="tab-content hidden space-y-6">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                <h2 class="font-bold text-lg text-indigo-900 mb-3">Gerenciar Produtos</h2>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
-                    <input type="text" id="prod-nome" placeholder="Nome do Produto" class="col-span-2 p-2 border rounded text-sm">
-                    <input type="number" id="prod-custo" placeholder="Custo R$" class="p-2 border rounded text-sm">
-                    <input type="number" id="prod-venda" placeholder="Venda R$" class="p-2 border rounded text-sm">
-                    <input type="number" id="prod-qtd" placeholder="Qtd Atual" class="p-2 border rounded text-sm">
-                    <select id="prod-cat" class="col-span-2 md:col-span-3 p-2 border rounded text-sm">
+                <h2 class="font-bold text-lg text-samauma-800 mb-3"><i class="fa-solid fa-boxes-stacked"></i> Gerenciar Produtos</h2>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <input type="text" id="prod-nome" placeholder="Nome do Produto" class="col-span-2 p-2 border border-slate-300 rounded text-sm focus:outline-none">
+                    <input type="number" step="0.01" id="prod-custo" placeholder="Custo R$" class="p-2 border border-slate-300 rounded text-sm focus:outline-none">
+                    <input type="number" step="0.01" id="prod-venda" placeholder="Venda R$" class="p-2 border border-slate-300 rounded text-sm focus:outline-none">
+                    <input type="number" id="prod-qtd" placeholder="Qtd Atual" class="p-2 border border-slate-300 rounded text-sm focus:outline-none">
+                    <select id="prod-cat" class="col-span-2 md:col-span-3 p-2 border border-slate-300 rounded text-sm focus:outline-none">
                         <option value="Bebidas">Bebidas</option>
                         <option value="Alimentos">Alimentos/Porções</option>
+                        <option value="Insumos">Insumos Gerais</option>
                         <option value="Outros">Outros</option>
                     </select>
-                    <button onclick="salvarProduto()" class="col-span-2 md:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow py-2">Salvar</button>
+                    <button onclick="salvarProduto()" class="col-span-2 md:col-span-2 bg-samauma-600 hover:bg-samauma-700 text-white font-bold rounded shadow-sm py-2 transition-colors">Salvar Produto</button>
                 </div>
                 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-slate-100 text-slate-500">
+                <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                    <table class="w-full text-sm text-left text-slate-600">
+                        <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
                             <tr>
-                                <th class="p-2">Produto</th>
-                                <th class="p-2">Categoria</th>
-                                <th class="p-2">Qtd</th>
-                                <th class="p-2">Custo</th>
-                                <th class="p-2">Venda</th>
-                                <th class="p-2 text-center">Ações</th>
+                                <th class="p-3">Produto</th>
+                                <th class="p-3">Categoria</th>
+                                <th class="p-3 text-center">Qtd</th>
+                                <th class="p-3 text-right">Custo</th>
+                                <th class="p-3 text-right">Venda</th>
+                                <th class="p-3 text-center">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="tabela-estoque" class="divide-y"></tbody>
+                        <tbody id="tabela-estoque" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -136,23 +158,30 @@
         <!-- 4. FINANCEIRO -->
         <section id="tab-financeiro" class="tab-content hidden space-y-6">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                <h2 class="font-bold text-lg text-indigo-900 mb-3">Registrar Despesa</h2>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
-                    <input type="text" id="desp-desc" placeholder="Descrição" class="col-span-2 p-2 border rounded text-sm">
-                    <input type="number" id="desp-valor" placeholder="Valor R$" class="p-2 border rounded text-sm">
-                    <button onclick="lancarDespesa()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold rounded shadow py-2">Registrar Saída</button>
+                <h2 class="font-bold text-lg text-samauma-800 mb-3"><i class="fa-solid fa-money-bill-transfer"></i> Lançar Despesa</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <input type="text" id="desp-desc" placeholder="Descrição (Ex: Gelo, Conta de Luz)" class="col-span-2 p-2 border border-slate-300 rounded text-sm focus:outline-none">
+                    <input type="number" step="0.01" id="desp-valor" placeholder="Valor R$" class="p-2 border border-slate-300 rounded text-sm focus:outline-none">
+                    <button onclick="lancarDespesa()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold rounded shadow-sm py-2 transition-colors">Registrar Saída</button>
                 </div>
                 
-                <h3 class="font-bold text-md text-slate-700 mb-2 mt-6">Extrato Recente</h3>
-                <ul id="lista-historico" class="divide-y text-sm border-t"></ul>
+                <h3 class="font-bold text-md text-slate-700 mb-2 mt-6">Extrato Recente de Caixa</h3>
+                <div class="border border-slate-200 rounded-lg bg-slate-50">
+                    <ul id="lista-historico" class="divide-y divide-slate-200 text-sm max-h-64 overflow-y-auto p-2"></ul>
+                </div>
             </div>
         </section>
 
     </main>
 
+    <!-- FOOTER -->
+    <footer class="bg-samauma-950 text-samauma-300 py-4 mt-auto text-center text-xs border-t border-samauma-800">
+        <p>&copy; 2026 Balneário Samaúma. Sincronizado via Supabase.</p>
+    </footer>
+
     <script>
         // ==========================================
-        // ⚙️ CONEXÃO SUPABASE
+        // ⚙️ CONEXÃO SUPABASE (ONLINE)
         // ==========================================
         const SUPABASE_URL = 'https://dglftygowdzgqlmnvnpd.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_4LwU9uPABP_td1NZ4T0qEA_ApHWJAOJ'; 
@@ -160,6 +189,9 @@
 
         let state = { produtos: [], vendas: [], despesas: [], transacoes: [], carrinho: [] };
 
+        // ==========================================
+        // DADOS E NUVEM
+        // ==========================================
         async function carregarTudo() {
             try {
                 const [resProd, resVend, resDesp, resTrans] = await Promise.all([
@@ -177,23 +209,23 @@
                 renderUI();
             } catch (err) {
                 console.error("Erro na nuvem:", err);
-                alert("Erro ao conectar com o banco de dados.");
+                alert("Erro ao conectar com o banco de dados. Verifique a internet.");
             }
         }
 
         // ==========================================
-        // RENDERIZAÇÃO DE UI
+        // RENDERIZAÇÃO
         // ==========================================
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('nav button').forEach(el => {
-                el.classList.remove('border-blue-400', 'text-white', 'bg-indigo-900/50');
-                el.classList.add('border-transparent', 'text-indigo-200');
+                el.classList.remove('border-samauma-accent', 'text-white', 'bg-samauma-900/60');
+                el.classList.add('border-transparent', 'text-samauma-200');
             });
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`btn-${tabId}`);
-            activeBtn.classList.remove('border-transparent', 'text-indigo-200');
-            activeBtn.classList.add('border-blue-400', 'text-white', 'bg-indigo-900/50');
+            activeBtn.classList.remove('border-transparent', 'text-samauma-200');
+            activeBtn.classList.add('border-samauma-accent', 'text-white', 'bg-samauma-900/60');
         }
 
         function formatCurrency(val) {
@@ -217,10 +249,13 @@
             document.getElementById('dash-saidas').innerText = formatCurrency(saidas);
             document.getElementById('dash-saldo').innerText = formatCurrency(entradas - saidas);
             document.getElementById('dash-lucro').innerText = formatCurrency(lucro);
+            
+            const lucroEl = document.getElementById('dash-lucro');
+            lucroEl.className = `text-2xl font-black mt-1 ${lucro < 0 ? 'text-rose-600' : 'text-slate-800'}`;
         }
 
         // ==========================================
-        // PRODUTOS & ESTOQUE
+        // ESTOQUE
         // ==========================================
         async function salvarProduto() {
             const nome = document.getElementById('prod-nome').value.trim();
@@ -231,6 +266,7 @@
 
             if (!nome || venda <= 0) return alert("Preencha nome e valor de venda!");
             
+            // Nuvem
             await db.from('produtos').insert([{ nome, custo, venda, qtd, categoria, min_stock: 5, unidade: 'unidade' }]);
             
             document.querySelectorAll('#tab-estoque input').forEach(i => i.value = '');
@@ -238,7 +274,7 @@
         }
 
         async function excluirProduto(id) {
-            if(confirm("Excluir produto?")) {
+            if(confirm("Deseja mesmo excluir este produto?")) {
                 await db.from('produtos').delete().eq('id', id);
                 carregarTudo();
             }
@@ -247,30 +283,32 @@
         function renderEstoque() {
             const tbody = document.getElementById('tabela-estoque');
             tbody.innerHTML = state.produtos.map(p => `
-                <tr>
-                    <td class="p-2 font-bold">${p.nome}</td>
-                    <td class="p-2 text-slate-500">${p.categoria}</td>
-                    <td class="p-2 ${p.qtd <= 5 ? 'text-red-500 font-bold' : ''}">${p.qtd}</td>
-                    <td class="p-2">${formatCurrency(p.custo)}</td>
-                    <td class="p-2 text-indigo-600 font-bold">${formatCurrency(p.venda)}</td>
-                    <td class="p-2 text-center"><button onclick="excluirProduto(${p.id})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-3 font-bold text-slate-800">${p.nome}</td>
+                    <td class="p-3 text-slate-500">${p.categoria}</td>
+                    <td class="p-3 text-center ${p.qtd <= 5 ? 'text-rose-600 font-black' : 'font-semibold'}">${p.qtd}</td>
+                    <td class="p-3 text-right">${formatCurrency(p.custo)}</td>
+                    <td class="p-3 text-right text-samauma-700 font-black">${formatCurrency(p.venda)}</td>
+                    <td class="p-3 text-center"><button onclick="excluirProduto(${p.id})" class="text-slate-400 hover:text-rose-600 p-1"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>
             `).join('');
         }
 
         // ==========================================
-        // PDV & VENDAS
+        // VENDAS / PDV
         // ==========================================
         function renderCardapio() {
             const busca = document.getElementById('venda-busca').value.toLowerCase();
             const grid = document.getElementById('cardapio-grid');
-            const prods = state.produtos.filter(p => p.nome.toLowerCase().includes(busca));
+            const prods = state.produtos.filter(p => p.nome.toLowerCase().includes(busca) && p.venda > 0);
             
             grid.innerHTML = prods.map(p => `
-                <div class="border p-2 rounded-lg text-center bg-white shadow-sm cursor-pointer hover:border-indigo-400" onclick="addCarrinho(${p.id})">
-                    <p class="font-bold text-xs truncate">${p.nome}</p>
-                    <p class="text-indigo-600 font-black text-sm">${formatCurrency(p.venda)}</p>
-                    <p class="text-[10px] text-slate-400 mt-1">Estoque: ${p.qtd}</p>
+                <div class="border border-slate-200 p-3 rounded-xl text-center bg-white shadow-sm cursor-pointer hover:border-samauma-400 hover:shadow-md transition-all flex flex-col justify-between h-full" onclick="addCarrinho(${p.id})">
+                    <p class="font-bold text-xs text-slate-700 line-clamp-2">${p.nome}</p>
+                    <div class="mt-2">
+                        <p class="text-samauma-600 font-black text-sm">${formatCurrency(p.venda)}</p>
+                        <p class="text-[10px] font-semibold mt-1 px-2 py-0.5 rounded-full inline-block ${p.qtd > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">Estoque: ${p.qtd}</p>
+                    </div>
                 </div>
             `).join('');
         }
@@ -278,11 +316,11 @@
         function addCarrinho(id) {
             const prod = state.produtos.find(p => p.id === id);
             if (!prod) return;
-            if (prod.qtd <= 0) return alert("Produto esgotado!");
+            if (prod.qtd <= 0) return alert("Produto esgotado no estoque!");
             
             const itemExistente = state.carrinho.find(i => i.id === id);
             if (itemExistente) {
-                if (itemExistente.qtdVenda >= prod.qtd) return alert("Estoque insuficiente!");
+                if (itemExistente.qtdVenda >= prod.qtd) return alert("Estoque insuficiente para adicionar mais!");
                 itemExistente.qtdVenda++;
                 itemExistente.subtotal = itemExistente.qtdVenda * prod.venda;
             } else {
@@ -301,14 +339,14 @@
             const total = state.carrinho.reduce((acc, i) => acc + i.subtotal, 0);
             
             if(state.carrinho.length === 0) {
-                lista.innerHTML = '<p class="text-xs text-center text-slate-400 mt-4">Carrinho vazio</p>';
+                lista.innerHTML = '<p class="text-xs text-center text-slate-400 mt-8"><i class="fa-solid fa-basket-shopping text-2xl mb-2 block"></i> Carrinho vazio</p>';
             } else {
                 lista.innerHTML = state.carrinho.map((item, idx) => `
-                    <div class="flex justify-between items-center text-sm py-1 border-b">
-                        <span>${item.qtdVenda}x ${item.nome}</span>
-                        <div>
-                            <span class="font-bold mr-2">${formatCurrency(item.subtotal)}</span>
-                            <button onclick="removeCarrinho(${idx})" class="text-red-500"><i class="fa-solid fa-times"></i></button>
+                    <div class="flex justify-between items-center text-sm py-2 border-b border-slate-100 px-1">
+                        <span class="font-semibold text-slate-700">${item.qtdVenda}x ${item.nome}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="font-black text-slate-800">${formatCurrency(item.subtotal)}</span>
+                            <button onclick="removeCarrinho(${idx})" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-times"></i></button>
                         </div>
                     </div>
                 `).join('');
@@ -317,34 +355,47 @@
         }
 
         async function finalizarVenda() {
-            if (state.carrinho.length === 0) return alert("Carrinho vazio!");
+            if (state.carrinho.length === 0) return alert("O carrinho está vazio!");
             
-            const cliente = document.getElementById('venda-cliente').value.trim() || 'Balcão';
+            const btn = document.querySelector('#tab-vendas button.bg-samauma-600');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            const cliente = document.getElementById('venda-cliente').value.trim() || 'Balcão/Geral';
             const pagamento = document.getElementById('venda-pagamento').value;
             const total = state.carrinho.reduce((acc, i) => acc + i.subtotal, 0);
             const custoTotal = state.carrinho.reduce((acc, i) => acc + (i.custo * i.qtdVenda), 0);
             const lucro = total - custoTotal;
 
-            // 1. Inserir Venda
-            const { data: vendaData } = await db.from('vendas').insert([{
-                cliente, tipo_cliente: 'Mesa', pagamento, total, desconto: 0, status: 'closed', lucro, itens: state.carrinho
-            }]).select();
+            try {
+                // 1. Inserir Venda na Nuvem
+                const { data: vendaData } = await db.from('vendas').insert([{
+                    cliente, tipo_cliente: 'Mesa', pagamento, total, desconto: 0, status: 'closed', lucro, itens: state.carrinho
+                }]).select();
 
-            // 2. Criar Transação
-            await db.from('transacoes').insert([{
-                tipo: 'entrada', categoria: 'Vendas', descricao: `Venda: ${cliente}`, valor: total, metodo_pagamento: pagamento, referencia_id: vendaData[0].id
-            }]);
+                // 2. Criar Transação de Caixa
+                if(vendaData && vendaData.length > 0) {
+                    await db.from('transacoes').insert([{
+                        tipo: 'entrada', categoria: 'Vendas', descricao: `Venda: ${cliente}`, valor: total, metodo_pagamento: pagamento, referencia_id: vendaData[0].id
+                    }]);
+                }
 
-            // 3. Atualizar Estoque
-            for (const item of state.carrinho) {
-                await db.from('produtos').update({ qtd: item.qtd - item.qtdVenda }).eq('id', item.id);
+                // 3. Atualizar Estoque na Nuvem
+                for (const item of state.carrinho) {
+                    await db.from('produtos').update({ qtd: item.qtd - item.qtdVenda }).eq('id', item.id);
+                }
+
+                state.carrinho = [];
+                document.getElementById('venda-cliente').value = '';
+                renderCarrinho();
+                await carregarTudo();
+                alert("Venda Sincronizada com Sucesso na Nuvem!");
+            } catch (e) {
+                alert("Erro ao salvar. Verifique a internet.");
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Fechar Venda';
+                btn.disabled = false;
             }
-
-            state.carrinho = [];
-            document.getElementById('venda-cliente').value = '';
-            renderCarrinho();
-            carregarTudo();
-            alert("Venda Sincronizada!");
         }
 
         // ==========================================
@@ -355,41 +406,56 @@
             const valor = parseFloat(document.getElementById('desp-valor').value) || 0;
             const hoje = new Date().toISOString().split('T')[0];
 
-            if (!descricao || valor <= 0) return alert("Preencha dados válidos!");
+            if (!descricao || valor <= 0) return alert("Preencha descrição e valor válidos!");
 
-            const { data: despData } = await db.from('despesas').insert([{
-                descricao, valor, categoria: 'Outros', data_vencimento: hoje, data_pagamento: hoje, status: 'paga', metodo_pagamento: 'Dinheiro'
-            }]).select();
+            const btn = document.querySelector('#tab-financeiro button.bg-rose-600');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
 
-            await db.from('transacoes').insert([{
-                tipo: 'saida', categoria: 'Despesas', descricao: `Despesa: ${descricao}`, valor, metodo_pagamento: 'Dinheiro', referencia_id: despData[0].id
-            }]);
+            try {
+                const { data: despData } = await db.from('despesas').insert([{
+                    descricao, valor, categoria: 'Outros', data_vencimento: hoje, data_pagamento: hoje, status: 'paga', metodo_pagamento: 'Dinheiro'
+                }]).select();
 
-            document.getElementById('desp-desc').value = '';
-            document.getElementById('desp-valor').value = '';
-            carregarTudo();
+                if(despData && despData.length > 0) {
+                    await db.from('transacoes').insert([{
+                        tipo: 'saida', categoria: 'Despesas', descricao: `Despesa: ${descricao}`, valor, metodo_pagamento: 'Dinheiro', referencia_id: despData[0].id
+                    }]);
+                }
+
+                document.getElementById('desp-desc').value = '';
+                document.getElementById('desp-valor').value = '';
+                await carregarTudo();
+            } catch (e) {
+                alert("Erro ao salvar despesa.");
+            } finally {
+                btn.innerHTML = 'Registrar Saída';
+                btn.disabled = false;
+            }
         }
 
         function renderFinanceiro() {
             const historico = document.getElementById('lista-historico');
             if (state.transacoes.length === 0) {
-                historico.innerHTML = '<li class="py-3 text-center text-slate-400">Sem registros</li>';
+                historico.innerHTML = '<li class="py-4 text-center text-slate-400">Nenhum fluxo registrado</li>';
             } else {
                 historico.innerHTML = state.transacoes.map(t => {
                     const isEntrada = t.tipo === 'entrada';
                     return `
-                    <li class="py-2 flex justify-between items-center">
+                    <li class="py-2.5 flex justify-between items-center px-2 hover:bg-slate-100 transition-colors">
                         <div>
-                            <p class="font-bold ${isEntrada ? 'text-emerald-600' : 'text-rose-600'}">${t.descricao}</p>
-                            <span class="text-[10px] text-slate-400">${new Date(t.created_at).toLocaleDateString('pt-BR')} via ${t.metodo_pagamento}</span>
+                            <p class="font-bold ${isEntrada ? 'text-emerald-700' : 'text-rose-700'} flex items-center gap-1.5">
+                                ${isEntrada ? '<i class="fa-solid fa-arrow-turn-up"></i>' : '<i class="fa-solid fa-arrow-turn-down"></i>'} ${t.descricao}
+                            </p>
+                            <span class="text-[10px] text-slate-500">${new Date(t.created_at).toLocaleDateString('pt-BR')} via ${t.metodo_pagamento || 'N/A'}</span>
                         </div>
-                        <span class="font-black ${isEntrada ? 'text-emerald-600' : 'text-rose-600'}">${isEntrada ? '+' : '-'} ${formatCurrency(t.valor)}</span>
+                        <span class="font-black text-sm ${isEntrada ? 'text-emerald-600' : 'text-rose-600'}">${isEntrada ? '+' : '-'} ${formatCurrency(t.valor)}</span>
                     </li>
                 `}).join('');
             }
         }
 
-        // Start
+        // START APP
         carregarTudo();
     </script>
 </body>
