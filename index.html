@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Balneário Samaúma - Gestão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body class="bg-emerald-50 text-slate-800 min-h-screen pb-16">
+
+  <!-- Topo -->
+  <header class="bg-emerald-800 text-white p-4 shadow-md sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-bold tracking-wide flex items-center gap-2">
+          <i class="fa-solid fa-tree"></i> Balneário Samaúma
+        </h1>
+        <p class="text-xs text-emerald-200">Painel de Gestão e Caixa</p>
+      </div>
+      <button onclick="exportarDados()" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-lg border border-emerald-500 shadow transition">
+        <i class="fa-solid fa-download"></i> Backup
+      </button>
+    </div>
+  </header>
+
+  <!-- Navegação por Abas -->
+  <nav class="bg-emerald-900 text-white shadow">
+    <div class="max-w-4xl mx-auto flex justify-around text-center text-sm font-medium">
+      <button onclick="trocarAba('pdv')" id="tab-pdv" class="py-3 px-2 flex-1 border-b-4 border-emerald-400 font-bold bg-emerald-800/50">
+        <i class="fa-solid fa-cash-register block text-lg mb-1"></i>Vendas
+      </button>
+      <button onclick="trocarAba('estoque')" id="tab-estoque" class="py-3 px-2 flex-1 border-b-4 border-transparent text-emerald-200 hover:text-white">
+        <i class="fa-solid fa-boxes-stacked block text-lg mb-1"></i>Estoque
+      </button>
+      <button onclick="trocarAba('financeiro')" id="tab-financeiro" class="py-3 px-2 flex-1 border-b-4 border-transparent text-emerald-200 hover:text-white">
+        <i class="fa-solid fa-chart-line block text-lg mb-1"></i>Balanço
+      </button>
+    </div>
+  </nav>
+
+  <!-- Conteúdo Principal -->
+  <main class="max-w-4xl mx-auto p-4">
+
+    <!-- ABA 1: VENDAS / PDV -->
+    <section id="aba-pdv" class="space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100">
+        <h2 class="font-bold text-lg text-emerald-900 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-cart-plus text-emerald-600"></i> Registrar Venda
+        </h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Comanda / Mesa / Cliente:</label>
+            <input type="text" id="venda-cliente" placeholder="Ex: Mesa 04 ou João" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Forma de Pagamento:</label>
+            <select id="venda-pagamento" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              <option value="PIX">PIX</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão de Débito">Cartão de Débito</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Selecionar Produto -->
+        <div class="flex gap-2 mb-3">
+          <select id="venda-produto-select" class="flex-1 p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></select>
+          <input type="number" id="venda-qtd" value="1" min="1" class="w-20 p-2 border border-slate-300 rounded-lg text-sm text-center" />
+          <button onclick="adicionarItemCarrinho()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 rounded-lg font-bold text-sm shadow transition">
+            + Adicionar
+          </button>
+        </div>
+
+        <!-- Carrinho -->
+        <div class="border rounded-lg p-3 bg-slate-50 mb-3">
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Itens da Comanda</h3>
+          <ul id="carrinho-lista" class="divide-y divide-slate-200 text-sm">
+            <li class="text-slate-400 text-center py-2 text-xs">Nenhum item adicionado</li>
+          </ul>
+          <div class="flex justify-between items-center pt-2 mt-2 border-t border-slate-200 font-bold">
+            <span>Total:</span>
+            <span id="carrinho-total" class="text-emerald-800 text-lg">R$ 0,00</span>
+          </div>
+        </div>
+
+        <button onclick="finalizarVenda()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-base shadow-md transition flex justify-center items-center gap-2">
+          <i class="fa-solid fa-check"></i> Concluir e Baixar Estoque
+        </button>
+      </div>
+    </section>
+
+    <!-- ABA 2: ESTOQUE -->
+    <section id="aba-estoque" class="hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100">
+        <h2 class="font-bold text-lg text-emerald-900 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-plus text-emerald-600"></i> Cadastrar / Atualizar Produto
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+          <div class="col-span-2">
+            <label class="text-xs font-semibold text-slate-600">Nome do Item:</label>
+            <input type="text" id="prod-nome" placeholder="Ex: Cerveja Lata, Porção de Peixe" class="w-full mt-1 p-2 border rounded-lg text-sm" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Preço Custo (R$):</label>
+            <input type="number" step="0.50" id="prod-custo" placeholder="0.00" class="w-full mt-1 p-2 border rounded-lg text-sm" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Preço Venda (R$):</label>
+            <input type="number" step="0.50" id="prod-venda" placeholder="0.00" class="w-full mt-1 p-2 border rounded-lg text-sm" />
+          </div>
+          <div class="col-span-2 sm:col-span-2">
+            <label class="text-xs font-semibold text-slate-600">Categoria:</label>
+            <select id="prod-cat" class="w-full mt-1 p-2 border rounded-lg text-sm">
+              <option value="Bebidas">Bebidas</option>
+              <option value="Porções/Comida">Porções/Comida</option>
+              <option value="Entrada/Pulseira">Entrada / Pulseira</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div class="col-span-2 sm:col-span-2">
+            <label class="text-xs font-semibold text-slate-600">Quantidade em Estoque:</label>
+            <input type="number" id="prod-qtd" placeholder="0" class="w-full mt-1 p-2 border rounded-lg text-sm" />
+          </div>
+        </div>
+        <button onclick="salvarProduto()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded-lg font-bold text-sm shadow transition">
+          Salvar Produto
+        </button>
+      </div>
+
+      <!-- Lista de Estoque -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100 overflow-x-auto">
+        <h3 class="font-bold text-md text-emerald-900 mb-2">Estoque Atual</h3>
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b bg-slate-50 text-slate-600">
+              <th class="p-2">Item</th>
+              <th class="p-2">Cat.</th>
+              <th class="p-2">Qtd</th>
+              <th class="p-2">Venda</th>
+              <th class="p-2 text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-estoque" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ABA 3: BALANÇO FINANCEIRO -->
+    <section id="aba-financeiro" class="hidden space-y-4">
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-emerald-600 text-white p-3 rounded-xl shadow-sm">
+          <span class="text-xs opacity-80 block">Entradas</span>
+          <span id="card-entradas" class="text-base sm:text-lg font-bold">R$ 0,00</span>
+        </div>
+        <div class="bg-rose-600 text-white p-3 rounded-xl shadow-sm">
+          <span class="text-xs opacity-80 block">Custos/Saídas</span>
+          <span id="card-saidas" class="text-base sm:text-lg font-bold">R$ 0,00</span>
+        </div>
+        <div class="bg-slate-800 text-white p-3 rounded-xl shadow-sm">
+          <span class="text-xs opacity-80 block">Lucro Líquido</span>
+          <span id="card-lucro" class="text-base sm:text-lg font-bold">R$ 0,00</span>
+        </div>
+      </div>
+
+      <!-- Lançar Despesa Rápida -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100">
+        <h3 class="font-bold text-sm text-slate-700 mb-2">Lançar Despesa / Saída de Caixa</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
+          <input type="text" id="desp-desc" placeholder="Ex: Gelo, Carvão, Limpeza" class="p-2 border rounded-lg text-sm" />
+          <input type="number" step="0.50" id="desp-valor" placeholder="Valor R$" class="p-2 border rounded-lg text-sm" />
+          <button onclick="lancarDespesa()" class="bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-sm py-2 shadow transition">
+            Registrar Saída
+          </button>
+        </div>
+      </div>
+
+      <!-- Extrato Recente -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100">
+        <h3 class="font-bold text-sm text-slate-700 mb-2">Histórico Financeiro</h3>
+        <ul id="lista-historico" class="divide-y divide-slate-100 text-xs max-h-64 overflow-y-auto"></ul>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Estado inicial
+    let state = {
+      produtos: JSON.parse(localStorage.getItem('samauma_produtos')) || [
+        { id: 1, nome: "Cerveja Lata", categoria: "Bebidas", custo: 3.0, venda: 6.0, qtd: 48 },
+        { id: 2, nome: "Água Mineral 500ml", categoria: "Bebidas", custo: 1.0, venda: 3.5, qtd: 30 },
+        { id: 3, nome: "Porção de Peixe Frito", categoria: "Porções/Comida", custo: 18.0, venda: 45.0, qtd: 15 }
+      ],
+      vendas: JSON.parse(localStorage.getItem('samauma_vendas')) || [],
+      despesas: JSON.parse(localStorage.getItem('samauma_despesas')) || [],
+      carrinho: []
+    };
+
+    function persistir() {
+      localStorage.setItem('samauma_produtos', JSON.stringify(state.produtos));
+      localStorage.setItem('samauma_vendas', JSON.stringify(state.vendas));
+      localStorage.setItem('samauma_despesas', JSON.stringify(state.despesas));
+      renderTudo();
+    }
+
+    function trocarAba(aba) {
+      ['pdv', 'estoque', 'financeiro'].forEach(a => {
+        document.getElementById(`aba-${a}`).classList.add('hidden');
+        document.getElementById(`tab-${a}`).className = "py-3 px-2 flex-1 border-b-4 border-transparent text-emerald-200 hover:text-white";
+      });
+      document.getElementById(`aba-${aba}`).classList.remove('hidden');
+      document.getElementById(`tab-${aba}`).className = "py-3 px-2 flex-1 border-b-4 border-emerald-400 font-bold bg-emerald-800/50";
+    }
+
+    function renderProdutosSelect() {
+      const select = document.getElementById('venda-produto-select');
+      select.innerHTML = state.produtos.map(p => 
+        `<option value="${p.id}">${p.nome} (Estoque: ${p.qtd}) - R$ ${p.venda.toFixed(2)}</option>`
+      ).join('');
+    }
+
+    function renderTabelaEstoque() {
+      const tbody = document.getElementById('tabela-estoque');
+      tbody.innerHTML = state.produtos.map(p => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-2 font-medium">${p.nome}</td>
+          <td class="p-2 text-slate-500">${p.categoria}</td>
+          <td class="p-2 ${p.qtd <= 5 ? 'text-rose-600 font-bold' : ''}">${p.qtd}</td>
+          <td class="p-2 font-semibold">R$ ${p.venda.toFixed(2)}</td>
+          <td class="p-2 text-center">
+            <button onclick="excluirProduto(${p.id})" class="text-rose-500 hover:text-rose-700">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function salvarProduto() {
+      const nome = document.getElementById('prod-nome').value.trim();
+      const custo = parseFloat(document.getElementById('prod-custo').value) || 0;
+      const venda = parseFloat(document.getElementById('prod-venda').value) || 0;
+      const categoria = document.getElementById('prod-cat').value;
+      const qtd = parseInt(document.getElementById('prod-qtd').value) || 0;
+
+      if (!nome || venda <= 0) return alert("Preencha o nome e o preço de venda!");
+
+      state.produtos.push({ id: Date.now(), nome, custo, venda, categoria, qtd });
+      persistir();
+      document.getElementById('prod-nome').value = '';
+      document.getElementById('prod-custo').value = '';
+      document.getElementById('prod-venda').value = '';
+      document.getElementById('prod-qtd').value = '';
+    }
+
+    function excluirProduto(id) {
+      if (confirm("Remover este produto?")) {
+        state.produtos = state.produtos.filter(p => p.id !== id);
+        persistir();
+      }
+    }
+
+    function adicionarItemCarrinho() {
+      const prodId = parseInt(document.getElementById('venda-produto-select').value);
+      const qtd = parseInt(document.getElementById('venda-qtd').value) || 1;
+      const prod = state.produtos.find(p => p.id === prodId);
+
+      if (!prod) return;
+      if (qtd > prod.qtd) return alert("Quantidade maior que o estoque atual!");
+
+      state.carrinho.push({ ...prod, qtdVenda: qtd, subtotal: prod.venda * qtd, custoTotal: prod.custo * qtd });
+      renderCarrinho();
+    }
+
+    function renderCarrinho() {
+      const lista = document.getElementById('carrinho-lista');
+      if (state.carrinho.length === 0) {
+        lista.innerHTML = `<li class="text-slate-400 text-center py-2 text-xs">Nenhum item adicionado</li>`;
+        document.getElementById('carrinho-total').innerText = "R$ 0,00";
+        return;
+      }
+
+      let total = 0;
+      lista.innerHTML = state.carrinho.map((item, index) => {
+        total += item.subtotal;
+        return `
+          <li class="py-2 flex justify-between items-center">
+            <span>${item.qtdVenda}x ${item.nome}</span>
+            <div class="flex items-center gap-3">
+              <span class="font-bold">R$ ${item.subtotal.toFixed(2)}</span>
+              <button onclick="removerDoCarrinho(${index})" class="text-rose-500 text-xs"><i class="fa-solid fa-times"></i></button>
+            </div>
+          </li>
+        `;
+      }).join('');
+      document.getElementById('carrinho-total').innerText = `R$ ${total.toFixed(2)}`;
+    }
+
+    function removerDoCarrinho(index) {
+      state.carrinho.splice(index, 1);
+      renderCarrinho();
+    }
+
+    function finalizarVenda() {
+      if (state.carrinho.length === 0) return alert("O carrinho está vazio!");
+      
+      const cliente = document.getElementById('venda-cliente').value.trim() || 'Balcão/Geral';
+      const pagamento = document.getElementById('venda-pagamento').value;
+      const total = state.carrinho.reduce((acc, i) => acc + i.subtotal, 0);
+      const custoTotal = state.carrinho.reduce((acc, i) => acc + i.custoTotal, 0);
+
+      // Baixa no estoque
+      state.carrinho.forEach(item => {
+        const prod = state.produtos.find(p => p.id === item.id);
+        if (prod) prod.qtd -= item.qtdVenda;
+      });
+
+      state.vendas.push({
+        id: Date.now(),
+        data: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
+        cliente,
+        pagamento,
+        total,
+        lucro: total - custoTotal,
+        itens: [...state.carrinho]
+      });
+
+      state.carrinho = [];
+      document.getElementById('venda-cliente').value = '';
+      renderCarrinho();
+      persistir();
+      alert("Venda realizada e estoque atualizado!");
+    }
+
+    function lancarDespesa() {
+      const desc = document.getElementById('desp-desc').value.trim();
+      const valor = parseFloat(document.getElementById('desp-valor').value) || 0;
+      if (!desc || valor <= 0) return alert("Informe descrição e valor válido!");
+
+      state.despesas.push({
+        id: Date.now(),
+        data: new Date().toLocaleDateString('pt-BR'),
+        descricao: desc,
+        valor: valor
+      });
+
+      document.getElementById('desp-desc').value = '';
+      document.getElementById('desp-valor').value = '';
+      persistir();
+    }
+
+    function renderFinanceiro() {
+      const totalEntradas = state.vendas.reduce((acc, v) => acc + v.total, 0);
+      const totalDespesas = state.despesas.reduce((acc, d) => acc + d.valor, 0);
+      const lucroLiquido = totalEntradas - totalDespesas;
+
+      document.getElementById('card-entradas').innerText = `R$ ${totalEntradas.toFixed(2)}`;
+      document.getElementById('card-saidas').innerText = `R$ ${totalDespesas.toFixed(2)}`;
+      document.getElementById('card-lucro').innerText = `R$ ${lucroLiquido.toFixed(2)}`;
+
+      const historico = document.getElementById('lista-historico');
+      const registros = [
+        ...state.vendas.map(v => ({ data: v.data, desc: `Venda (${v.cliente}) [${v.pagamento}]`, valor: v.total, tipo: 'in' })),
+        ...state.despesas.map(d => ({ data: d.data, desc: `Despesa: ${d.descricao}`, valor: d.valor, tipo: 'out' }))
+      ].reverse();
+
+      if (registros.length === 0) {
+        historico.innerHTML = `<li class="py-2 text-slate-400 text-center">Nenhuma movimentação registrada</li>`;
+        return;
+      }
+
+      historico.innerHTML = registros.map(r => `
+        <li class="py-2 flex justify-between items-center">
+          <div>
+            <p class="font-medium ${r.tipo === 'in' ? 'text-emerald-800' : 'text-rose-800'}">${r.desc}</p>
+            <span class="text-slate-400 text-[10px]">${r.data}</span>
+          </div>
+          <span class="font-bold ${r.tipo === 'in' ? 'text-emerald-600' : 'text-rose-600'}">
+            ${r.tipo === 'in' ? '+' : '-'} R$ ${r.valor.toFixed(2)}
+          </span>
+        </li>
+      `).join('');
+    }
+
+    function exportarDados() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `backup_samauma_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function renderTudo() {
+      renderProdutosSelect();
+      renderTabelaEstoque();
+      renderFinanceiro();
+    }
+
+    // Inicialização
+    renderTudo();
+  </script>
+</body>
+</html>
