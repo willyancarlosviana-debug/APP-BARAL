@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Balneário Samaúma - Gestão</title>
+  <title>Balneário Samaúma - Gestão Nuvem</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-emerald-50 text-slate-800 min-h-screen pb-16">
 
@@ -16,11 +18,11 @@
         <h1 class="text-xl font-bold tracking-wide flex items-center gap-2">
           <i class="fa-solid fa-tree"></i> Balneário Samaúma
         </h1>
-        <p class="text-xs text-emerald-200">Painel de Gestão e Caixa</p>
+        <p class="text-xs text-emerald-200">Sincronizado em Tempo Real (Nuvem)</p>
       </div>
-      <button onclick="exportarDados()" class="bg-emerald-700 hover:bg-emerald-600 text-xs px-3 py-1.5 rounded-lg border border-emerald-500 shadow transition">
-        <i class="fa-solid fa-download"></i> Backup
-      </button>
+      <div id="status-conexao" class="text-xs bg-emerald-700 px-3 py-1 rounded-full flex items-center gap-1 border border-emerald-500">
+        <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span> Online
+      </div>
     </div>
   </header>
 
@@ -86,8 +88,8 @@
           </div>
         </div>
 
-        <button onclick="finalizarVenda()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-base shadow-md transition flex justify-center items-center gap-2">
-          <i class="fa-solid fa-check"></i> Concluir e Baixar Estoque
+        <button onclick="finalizarVenda()" id="btn-finalizar" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-base shadow-md transition flex justify-center items-center gap-2">
+          <i class="fa-solid fa-check"></i> Concluir Venda
         </button>
       </div>
     </section>
@@ -165,7 +167,7 @@
         </div>
       </div>
 
-      <!-- Lançar Despesa Rápida -->
+      <!-- Lançar Despesa -->
       <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100">
         <h3 class="font-bold text-sm text-slate-700 mb-2">Lançar Despesa / Saída de Caixa</h3>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
@@ -187,23 +189,36 @@
   </main>
 
   <script>
-    // Estado inicial
+    // ==========================================
+    // ⚙️ CONEXÃO SUPABASE
+    // ==========================================
+    const SUPABASE_URL = 'https://dglftygowdzgqlmnvnpd.supabase.co';
+    // Substitua pelo valor completo copiado da aba API Keys do Supabase:
+const SUPABASE_KEY = 'sb_publishable_4LwU9uPABP_td1NZ4T0qEA_ApHWJAOJ';
+    
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     let state = {
-      produtos: JSON.parse(localStorage.getItem('samauma_produtos')) || [
-        { id: 1, nome: "Cerveja Lata", categoria: "Bebidas", custo: 3.0, venda: 6.0, qtd: 48 },
-        { id: 2, nome: "Água Mineral 500ml", categoria: "Bebidas", custo: 1.0, venda: 3.5, qtd: 30 },
-        { id: 3, nome: "Porção de Peixe Frito", categoria: "Porções/Comida", custo: 18.0, venda: 45.0, qtd: 15 }
-      ],
-      vendas: JSON.parse(localStorage.getItem('samauma_vendas')) || [],
-      despesas: JSON.parse(localStorage.getItem('samauma_despesas')) || [],
+      produtos: [],
+      vendas: [],
+      despesas: [],
       carrinho: []
     };
 
-    function persistir() {
-      localStorage.setItem('samauma_produtos', JSON.stringify(state.produtos));
-      localStorage.setItem('samauma_vendas', JSON.stringify(state.vendas));
-      localStorage.setItem('samauma_despesas', JSON.stringify(state.despesas));
-      renderTudo();
+    async function carregarTudo() {
+      try {
+        const { data: produtos } = await db.from('produtos').select('*').order('nome');
+        const { data: vendas } = await db.from('vendas').select('*').order('created_at', { ascending: false });
+        const { data: despesas } = await db.from('despesas').select('*').order('created_at', { ascending: false });
+
+        state.produtos = produtos || [];
+        state.vendas = vendas || [];
+        state.despesas = despesas || [];
+
+        renderTudo();
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+      }
     }
 
     function trocarAba(aba) {
@@ -218,7 +233,7 @@
     function renderProdutosSelect() {
       const select = document.getElementById('venda-produto-select');
       select.innerHTML = state.produtos.map(p => 
-        `<option value="${p.id}">${p.nome} (Estoque: ${p.qtd}) - R$ ${p.venda.toFixed(2)}</option>`
+        `<option value="${p.id}">${p.nome} (Estoque: ${p.qtd}) - R$ ${Number(p.venda).toFixed(2)}</option>`
       ).join('');
     }
 
@@ -229,7 +244,7 @@
           <td class="p-2 font-medium">${p.nome}</td>
           <td class="p-2 text-slate-500">${p.categoria}</td>
           <td class="p-2 ${p.qtd <= 5 ? 'text-rose-600 font-bold' : ''}">${p.qtd}</td>
-          <td class="p-2 font-semibold">R$ ${p.venda.toFixed(2)}</td>
+          <td class="p-2 font-semibold">R$ ${Number(p.venda).toFixed(2)}</td>
           <td class="p-2 text-center">
             <button onclick="excluirProduto(${p.id})" class="text-rose-500 hover:text-rose-700">
               <i class="fa-solid fa-trash"></i>
@@ -239,7 +254,7 @@
       `).join('');
     }
 
-    function salvarProduto() {
+    async function salvarProduto() {
       const nome = document.getElementById('prod-nome').value.trim();
       const custo = parseFloat(document.getElementById('prod-custo').value) || 0;
       const venda = parseFloat(document.getElementById('prod-venda').value) || 0;
@@ -248,18 +263,19 @@
 
       if (!nome || venda <= 0) return alert("Preencha o nome e o preço de venda!");
 
-      state.produtos.push({ id: Date.now(), nome, custo, venda, categoria, qtd });
-      persistir();
+      await db.from('produtos').insert([{ nome, custo, venda, categoria, qtd }]);
+      
       document.getElementById('prod-nome').value = '';
       document.getElementById('prod-custo').value = '';
       document.getElementById('prod-venda').value = '';
       document.getElementById('prod-qtd').value = '';
+      carregarTudo();
     }
 
-    function excluirProduto(id) {
+    async function excluirProduto(id) {
       if (confirm("Remover este produto?")) {
-        state.produtos = state.produtos.filter(p => p.id !== id);
-        persistir();
+        await db.from('produtos').delete().eq('id', id);
+        carregarTudo();
       }
     }
 
@@ -304,7 +320,7 @@
       renderCarrinho();
     }
 
-    function finalizarVenda() {
+    async function finalizarVenda() {
       if (state.carrinho.length === 0) return alert("O carrinho está vazio!");
       
       const cliente = document.getElementById('venda-cliente').value.trim() || 'Balcão/Geral';
@@ -312,49 +328,43 @@
       const total = state.carrinho.reduce((acc, i) => acc + i.subtotal, 0);
       const custoTotal = state.carrinho.reduce((acc, i) => acc + i.custoTotal, 0);
 
-      // Baixa no estoque
-      state.carrinho.forEach(item => {
-        const prod = state.produtos.find(p => p.id === item.id);
-        if (prod) prod.qtd -= item.qtdVenda;
-      });
-
-      state.vendas.push({
-        id: Date.now(),
-        data: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
+      // Salva na nuvem
+      await db.from('vendas').insert([{
         cliente,
         pagamento,
         total,
         lucro: total - custoTotal,
-        itens: [...state.carrinho]
-      });
+        itens: state.carrinho
+      }]);
+
+      // Atualiza estoque na nuvem
+      for (const item of state.carrinho) {
+        const novoEstoque = item.qtd - item.qtdVenda;
+        await db.from('produtos').update({ qtd: novoEstoque }).eq('id', item.id);
+      }
 
       state.carrinho = [];
       document.getElementById('venda-cliente').value = '';
       renderCarrinho();
-      persistir();
-      alert("Venda realizada e estoque atualizado!");
+      carregarTudo();
+      alert("Venda realizada e sincronizada na nuvem!");
     }
 
-    function lancarDespesa() {
+    async function lancarDespesa() {
       const desc = document.getElementById('desp-desc').value.trim();
       const valor = parseFloat(document.getElementById('desp-valor').value) || 0;
       if (!desc || valor <= 0) return alert("Informe descrição e valor válido!");
 
-      state.despesas.push({
-        id: Date.now(),
-        data: new Date().toLocaleDateString('pt-BR'),
-        descricao: desc,
-        valor: valor
-      });
+      await db.from('despesas').insert([{ descricao: desc, valor }]);
 
       document.getElementById('desp-desc').value = '';
       document.getElementById('desp-valor').value = '';
-      persistir();
+      carregarTudo();
     }
 
     function renderFinanceiro() {
-      const totalEntradas = state.vendas.reduce((acc, v) => acc + v.total, 0);
-      const totalDespesas = state.despesas.reduce((acc, d) => acc + d.valor, 0);
+      const totalEntradas = state.vendas.reduce((acc, v) => acc + Number(v.total), 0);
+      const totalDespesas = state.despesas.reduce((acc, d) => acc + Number(d.valor), 0);
       const lucroLiquido = totalEntradas - totalDespesas;
 
       document.getElementById('card-entradas').innerText = `R$ ${totalEntradas.toFixed(2)}`;
@@ -363,9 +373,9 @@
 
       const historico = document.getElementById('lista-historico');
       const registros = [
-        ...state.vendas.map(v => ({ data: v.data, desc: `Venda (${v.cliente}) [${v.pagamento}]`, valor: v.total, tipo: 'in' })),
-        ...state.despesas.map(d => ({ data: d.data, desc: `Despesa: ${d.descricao}`, valor: d.valor, tipo: 'out' }))
-      ].reverse();
+        ...state.vendas.map(v => ({ data: new Date(v.created_at).toLocaleString('pt-BR'), desc: `Venda (${v.cliente}) [${v.pagamento}]`, valor: Number(v.total), tipo: 'in' })),
+        ...state.despesas.map(d => ({ data: new Date(d.created_at).toLocaleString('pt-BR'), desc: `Despesa: ${d.descricao}`, valor: Number(d.valor), tipo: 'out' }))
+      ];
 
       if (registros.length === 0) {
         historico.innerHTML = `<li class="py-2 text-slate-400 text-center">Nenhuma movimentação registrada</li>`;
@@ -385,16 +395,6 @@
       `).join('');
     }
 
-    function exportarDados() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `backup_samauma_${Date.now()}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    }
-
     function renderTudo() {
       renderProdutosSelect();
       renderTabelaEstoque();
@@ -402,7 +402,7 @@
     }
 
     // Inicialização
-    renderTudo();
+    carregarTudo();
   </script>
 </body>
 </html>
