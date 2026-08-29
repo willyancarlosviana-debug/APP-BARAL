@@ -3,7 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Samaúma - Gestão Operacional & Financeira</title>
+    <!-- PWA: instalação como app -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0e1b12">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sumaúma">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -2915,6 +2925,13 @@
                 toast.className = 'fixed bottom-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-white font-bold text-xs flex items-center gap-2 transform translate-y-12 opacity-0 transition-all duration-300';
             }, 3000);
         }
+
+// Registra o Service Worker (necessário pra instalação como app/PWA)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Falha ao registrar service worker:', err));
+    });
+}
 
 // Run on load
 SamaumaController.init();
