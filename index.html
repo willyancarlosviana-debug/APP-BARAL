@@ -86,9 +86,6 @@
             
             <!-- Tab Buttons Navigation -->
             <nav class="flex overflow-x-auto border-t border-samauma-800 custom-scrollbar scroll-smooth">
-                <button id="btn-dashboard" onclick="switchTab('dashboard')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-chart-line text-lg"></i> Dashboard
-                </button>
                 <button id="btn-vendas" onclick="switchTab('vendas')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
                     <i class="fa-solid fa-cash-register text-lg"></i> Vendas / PDV
                 </button>
@@ -97,6 +94,9 @@
                 </button>
                 <button id="btn-financeiro" onclick="switchTab('financeiro')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
                     <i class="fa-solid fa-money-bill-transfer text-lg"></i> Financeiro
+                </button>
+                <button id="btn-dashboard" onclick="switchTab('dashboard')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-line text-lg"></i> Dashboard
                 </button>
                 <button id="btn-config" onclick="switchTab('config')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
                     <i class="fa-solid fa-sliders text-lg"></i> Configurações
@@ -311,7 +311,7 @@
                             </span>
                             <input type="text" id="comanda-search" oninput="renderVendas()" placeholder="Buscar mesa/comanda..." class="w-full sm:w-60 pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none">
                         </div>
-                        <button onclick="openModal('modal-abrir-comanda')" class="bg-samauma-700 hover:bg-samauma-800 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm whitespace-nowrap">
+                        <button onclick="openModal('modal-abrir-comanda')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm whitespace-nowrap">
                             <i class="fa-solid fa-plus"></i> Abrir Atendimento
                         </button>
                     </div>
@@ -398,8 +398,8 @@
                         </div>
                     </div>
 
-                    <!-- Products Grid -->
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[480px] custom-scrollbar" id="pos-menu-products">
+                    <!-- Products List -->
+                    <div class="flex flex-col gap-2 overflow-y-auto max-h-[480px] custom-scrollbar" id="pos-menu-products">
                         <!-- Renderizado dinamicamente -->
                     </div>
                 </div>
@@ -446,7 +446,6 @@
                             <option value="Bebidas">Bebidas</option>
                             <option value="Alimentos">Alimentos</option>
                             <option value="Porções">Porções</option>
-                            <option value="Insumos Gerais">Insumos Gerais</option>
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
@@ -852,7 +851,6 @@
                         <option value="Bebidas">Bebidas</option>
                         <option value="Alimentos">Alimentos</option>
                         <option value="Porções">Porções</option>
-                        <option value="Insumos Gerais">Insumos Gerais</option>
                         <option value="Outros">Outros</option>
                     </select>
                 </div>
@@ -880,7 +878,7 @@
 
             <div class="grid grid-cols-2 gap-2" id="stock-initial-fields">
                 <div>
-                    <label for="prod-stock" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Estoque Inicial</label>
+                    <label for="prod-stock" id="prod-stock-label" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Estoque Inicial</label>
                     <input type="number" id="prod-stock" step="any" min="0" value="0" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
                 </div>
                 <div>
@@ -1215,100 +1213,10 @@
                     return d.toISOString().split('T')[0];
                 };
 
-                const defaultExpenses = [
-                    { id: "exp_1", dueDate: formatDate(15), payDate: formatDate(15), category: "Fixa", description: "Energia Elétrica Balneário", amount: 350.00, status: "paga" },
-                    { id: "exp_2", dueDate: formatDate(10), payDate: formatDate(10), category: "Fixa", description: "Internet Fibra Óptica", amount: 120.00, status: "paga" },
-                    { id: "exp_3", dueDate: formatDate(0), payDate: "", category: "Compras", description: "Compra de Gelo (Reposição)", amount: 60.00, status: "pendente" },
-                    { id: "exp_4", dueDate: formatDate(-3), payDate: "", category: "Pessoal", description: "Diária de Salva-vidas", amount: 200.00, status: "pendente" }
-                ];
-
-                const defaultSales = [
-                    {
-                        id: "sale_1",
-                        date: new Date(new Date().setDate(today.getDate() - 1)).toISOString(), // ontem
-                        customerType: "Mesa",
-                        customerName: "Mesa 04",
-                        items: [
-                            { productId: "prod_2", name: "Cerveja Heineken Long Neck", quantity: 4, costPrice: 4.50, sellPrice: 9.00 },
-                            { productId: "prod_3", name: "Porção de Batata Frita", quantity: 1, costPrice: 8.00, sellPrice: 25.00 }
-                        ],
-                        totalAmount: 61.00,
-                        discount: 0,
-                        paymentMethod: "PIX",
-                        status: "closed"
-                    },
-                    {
-                        id: "sale_2",
-                        date: new Date().toISOString(), // hoje
-                        customerType: "Mesa",
-                        customerName: "Mesa 02",
-                        items: [
-                            { productId: "prod_4", name: "Isca de Peixe (Tambaqui)", quantity: 1, costPrice: 15.00, sellPrice: 45.00 },
-                            { productId: "prod_1", name: "Água Mineral 500ml", quantity: 2, costPrice: 1.50, sellPrice: 4.00 }
-                        ],
-                        totalAmount: 53.00,
-                        discount: 0,
-                        paymentMethod: "Cartão de Crédito",
-                        status: "closed"
-                    },
-                    {
-                        id: "sale_3",
-                        date: new Date().toISOString(), // hoje aberta
-                        customerType: "Mesa",
-                        customerName: "Mesa 03",
-                        items: [
-                            { productId: "prod_2", name: "Cerveja Heineken Long Neck", quantity: 2, costPrice: 4.50, sellPrice: 9.00 },
-                            { productId: "prod_3", name: "Porção de Batata Frita", quantity: 1, costPrice: 8.00, sellPrice: 25.00 }
-                        ],
-                        totalAmount: 43.00,
-                        discount: 0,
-                        paymentMethod: "",
-                        status: "open"
-                    }
-                ];
-
-                const defaultTransactions = [
-                    {
-                        id: "tx_1",
-                        date: new Date(new Date().setDate(today.getDate() - 15)).toISOString(),
-                        type: "saida",
-                        category: "Despesas",
-                        description: "Pagamento: Energia Elétrica Balneário",
-                        amount: 350.00,
-                        paymentMethod: "PIX",
-                        referenceId: "exp_1"
-                    },
-                    {
-                        id: "tx_2",
-                        date: new Date(new Date().setDate(today.getDate() - 10)).toISOString(),
-                        type: "saida",
-                        category: "Despesas",
-                        description: "Pagamento: Internet Fibra Óptica",
-                        amount: 120.00,
-                        paymentMethod: "PIX",
-                        referenceId: "exp_2"
-                    },
-                    {
-                        id: "tx_3",
-                        date: new Date(new Date().setDate(today.getDate() - 1)).toISOString(),
-                        type: "entrada",
-                        category: "Vendas",
-                        description: "Venda Fechada - Mesa 04",
-                        amount: 61.00,
-                        paymentMethod: "PIX",
-                        referenceId: "sale_1"
-                    },
-                    {
-                        id: "tx_4",
-                        date: new Date().toISOString(),
-                        type: "entrada",
-                        category: "Vendas",
-                        description: "Venda Fechada - Mesa 02",
-                        amount: 53.00,
-                        paymentMethod: "Cartão de Crédito",
-                        referenceId: "sale_2"
-                    }
-                ];
+                // Começa sem vendas, despesas ou transações de exemplo — só o cardápio de produtos.
+                const defaultExpenses = [];
+                const defaultSales = [];
+                const defaultTransactions = [];
 
                 this.set('products', defaultProducts);
                 this.set('expenses', defaultExpenses);
@@ -1328,8 +1236,6 @@
                 const idx = products.findIndex(p => p.id === product.id);
                 
                 if (idx >= 0) {
-                    // Mantém o estoque original
-                    product.stock = products[idx].stock;
                     products[idx] = product;
                 } else {
                     product.id = `prod_${Date.now()}`;
@@ -1807,6 +1713,7 @@
         // ==========================================
         let dashboardPeriod = 'mes';
         let currentMenuCategoryFilter = '';
+        let posMenuVariantSelection = {};
         let chartCashflowInstance = null;
         let chartTopProductsInstance = null;
 
@@ -1890,25 +1797,8 @@
                 document.getElementById('dash-saldo').className = "text-2xl font-black text-slate-800 mt-1";
             }
 
-            // Alertas de estoque crítico
-            const products = SamaumaStore.get('products', []);
-            const lowStockProducts = products.filter(p => p.stock <= p.minStock);
-            const alertBox = document.getElementById('dashboard-stock-alerts');
-            const alertList = document.getElementById('dashboard-stock-alerts-list');
-            
-            if (lowStockProducts.length > 0) {
-                alertBox.classList.remove('hidden');
-                alertList.innerHTML = lowStockProducts.map(p => `
-                    <div class="bg-white/80 p-2 rounded border border-amber-200 text-xs flex justify-between items-center shadow-sm">
-                        <span class="font-bold text-slate-700">${p.name}</span>
-                        <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-black">
-                            ${p.stock} / min: ${p.minStock} ${p.unit}
-                        </span>
-                    </div>
-                `).join('');
-            } else {
-                alertBox.classList.add('hidden');
-            }
+            // Alerta de estoque crítico desativado por enquanto (estoque/mínimo ainda não é cadastrado nos produtos)
+            document.getElementById('dashboard-stock-alerts').classList.add('hidden');
 
             // Preenche tabelas de resumos no dashboard
             renderDashboardTables(stats);
@@ -2168,15 +2058,22 @@
             }
         }
 
+        // Extrai o nome-base e o tamanho de produtos com variações "(Pequena)" / "(Média)"
+        function parseMenuVariant(name) {
+            const match = name.match(/^(.*)\s\((Pequena|Média)\)$/);
+            if (!match) return null;
+            return { baseName: match[1], size: match[2] };
+        }
+
         function renderPOSMenu() {
             const query = document.getElementById('pos-menu-search').value.toLowerCase();
             const products = SamaumaStore.get('products', []);
-            
+
             // Filtra produtos válidos para venda (ignora custos unitários brutos de insumos brutos sem preço de venda)
             const sellableProducts = products.filter(p => p.sellPrice > 0 && p.name.toLowerCase().includes(query) && (currentMenuCategoryFilter === '' || p.category === currentMenuCategoryFilter));
 
             // Renderizar Abas de Categorias no menu do PDV
-            const categories = ['Todos', 'Bebidas', 'Alimentos', 'Porções', 'Insumos Gerais', 'Outros'];
+            const categories = ['Todos', 'Bebidas', 'Alimentos', 'Porções', 'Outros'];
             const categoriesContainer = document.getElementById('pos-menu-categories');
             categoriesContainer.innerHTML = categories.map(cat => {
                 const catValue = cat === 'Todos' ? '' : cat;
@@ -2184,47 +2081,81 @@
                 return `<button onclick="filterPOSMenuByCategory('${catValue}')" class="px-3 py-1 text-xs font-bold rounded-lg border transition-all whitespace-nowrap ${activeClass}">${cat}</button>`;
             }).join('');
 
-            const grid = document.getElementById('pos-menu-products');
-            if (sellableProducts.length > 0) {
-                grid.innerHTML = sellableProducts.map(prod => {
-                    const isLowStock = prod.stock <= prod.minStock;
-                    const isOutOfStock = prod.stock <= 0;
-                    
-                    let badgeClass = "bg-emerald-100 text-emerald-800";
-                    let badgeText = `${prod.stock} ${prod.unit}`;
-                    if (isOutOfStock) {
-                        badgeClass = "bg-red-100 text-red-800";
-                        badgeText = "Esgotado";
-                    } else if (isLowStock) {
-                        badgeClass = "bg-amber-100 text-amber-800";
-                        badgeText = `Baixo: ${prod.stock}`;
+            // Agrupa produtos com variações de tamanho num único item de menu
+            const menuItems = [];
+            const groupIndexByKey = {};
+            sellableProducts.forEach(prod => {
+                const variant = parseMenuVariant(prod.name);
+                if (!variant) {
+                    menuItems.push({ type: 'single', product: prod });
+                    return;
+                }
+                const key = `${prod.category}::${variant.baseName}`;
+                if (groupIndexByKey[key] === undefined) {
+                    groupIndexByKey[key] = menuItems.length;
+                    menuItems.push({ type: 'grouped', baseName: variant.baseName, category: prod.category, sizes: {} });
+                }
+                menuItems[groupIndexByKey[key]].sizes[variant.size] = prod;
+            });
+
+            const list = document.getElementById('pos-menu-products');
+            if (menuItems.length > 0) {
+                list.innerHTML = menuItems.map(item => {
+                    if (item.type === 'single') {
+                        const prod = item.product;
+                        return renderMenuRow(prod, prod.name, prod.category, null);
                     }
 
-                    return `
-                        <div class="bg-white p-3 rounded-xl border border-slate-100 flex flex-col justify-between shadow-sm hover:border-samauma-300 transition-colors">
-                            <div>
-                                <div class="flex justify-between items-start gap-1">
-                                    <span class="text-[8px] bg-slate-100 text-slate-500 uppercase px-1.5 py-0.5 rounded font-semibold">${prod.category}</span>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-black ${badgeClass}">${badgeText}</span>
-                                </div>
-                                <h4 class="text-xs font-bold text-slate-800 mt-2 line-clamp-2">${prod.name}</h4>
-                            </div>
-                            <div class="mt-4 flex justify-between items-center pt-2 border-t border-slate-50">
-                                <span class="text-sm font-black text-samauma-800">${formatCurrency(prod.sellPrice)}</span>
-                                <button onclick="addProductToCart('${prod.id}')" ${isOutOfStock ? 'disabled' : ''} class="bg-samauma-600 hover:bg-samauma-700 disabled:bg-slate-200 text-white font-bold p-2 rounded-lg text-xs transition-colors flex items-center justify-center">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                    // Item com variações de tamanho: escolhe o tamanho selecionado (ou o primeiro disponível)
+                    const availableSizes = Object.keys(item.sizes);
+                    let selectedSize = posMenuVariantSelection[item.baseName];
+                    if (!selectedSize || !item.sizes[selectedSize]) {
+                        selectedSize = availableSizes.includes('Pequena') ? 'Pequena' : availableSizes[0];
+                    }
+                    const prod = item.sizes[selectedSize];
+
+                    const sizeButtons = availableSizes.map(size => {
+                        const isActive = size === selectedSize;
+                        const activeClass = isActive ? 'bg-samauma-700 text-white border-samauma-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
+                        return `<button onclick="selectMenuVariant('${item.baseName.replace(/'/g, "\\'")}', '${size}')" class="px-2 py-1 text-[10px] font-bold rounded-md border transition-all ${activeClass}">${size}</button>`;
+                    }).join('');
+
+                    return renderMenuRow(prod, item.baseName, item.category, sizeButtons);
                 }).join('');
             } else {
-                grid.innerHTML = `
-                    <div class="col-span-full bg-white p-8 rounded-xl border border-slate-100 text-center text-slate-400">
+                list.innerHTML = `
+                    <div class="bg-white p-8 rounded-xl border border-slate-100 text-center text-slate-400">
                         Nenhum produto cadastrado nesta categoria.
                     </div>
                 `;
             }
+        }
+
+        // Renderiza uma linha da lista de produtos do PDV (usada para itens simples e para itens com tamanho)
+        // Obs: por enquanto o controle de estoque/mínimo não bloqueia nem sinaliza a venda (será cadastrado depois).
+        function renderMenuRow(prod, displayName, category, sizeButtonsHtml) {
+            return `
+                <div class="bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between gap-3 shadow-sm hover:border-samauma-300 transition-colors">
+                    <div class="min-w-0 flex-grow">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[8px] bg-slate-100 text-slate-500 uppercase px-1.5 py-0.5 rounded font-semibold">${category}</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-800 mt-1 truncate">${displayName}</h4>
+                        ${sizeButtonsHtml ? `<div class="flex gap-1.5 mt-1.5">${sizeButtonsHtml}</div>` : ''}
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <span class="text-sm font-black text-samauma-800">${formatCurrency(prod.sellPrice)}</span>
+                        <button onclick="addProductToCart('${prod.id}')" class="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-lg text-xs transition-colors flex items-center justify-center">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectMenuVariant(baseName, size) {
+            posMenuVariantSelection[baseName] = size;
+            renderPOSMenu();
         }
 
         function filterPOSMenuByCategory(category) {
@@ -2404,10 +2335,13 @@
             document.getElementById('prod-unit').value = prod.unit;
             document.getElementById('prod-cost-price').value = prod.costPrice;
             document.getElementById('prod-sell-price').value = prod.sellPrice;
-            
-            // Oculta inicialização de estoque na edição pra evitar adulteração manual
-            document.getElementById('stock-initial-fields').classList.add('hidden');
-            
+
+            // Permite editar o estoque atual e o mínimo direto por aqui
+            document.getElementById('stock-initial-fields').classList.remove('hidden');
+            document.getElementById('prod-stock-label').innerText = 'Estoque Atual';
+            document.getElementById('prod-stock').value = prod.stock;
+            document.getElementById('prod-min-stock').value = prod.minStock;
+
             openModal('modal-novo-produto');
         }
 
@@ -2919,13 +2853,15 @@
                 document.getElementById('product-modal-title').innerHTML = `<i class="fa-solid fa-box-open text-samauma-600"></i> Cadastrar Novo Produto`;
                 document.getElementById('btn-save-product').innerText = "Cadastrar Produto";
                 document.getElementById('stock-initial-fields').classList.remove('hidden');
-                
+                document.getElementById('prod-stock-label').innerText = 'Estoque Inicial';
+
                 // Reseta inputs
                 document.getElementById('prod-id').value = '';
                 document.getElementById('prod-name').value = '';
                 document.getElementById('prod-cost-price').value = '';
                 document.getElementById('prod-sell-price').value = '';
                 document.getElementById('prod-stock').value = 0;
+                document.getElementById('prod-min-stock').value = 5;
             }
         }
 
