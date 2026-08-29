@@ -1126,11 +1126,86 @@
             // Carrega dados de exemplo para demonstração rápida do sistema
             static loadDemoData() {
                 const defaultProducts = [
-                    { id: "prod_1", name: "Água Mineral 500ml", category: "Bebidas", unit: "unidade", costPrice: 1.50, sellPrice: 4.00, stock: 45, minStock: 15 },
-                    { id: "prod_2", name: "Cerveja Heineken Long Neck", category: "Bebidas", unit: "unidade", costPrice: 4.50, sellPrice: 9.00, stock: 12, minStock: 20 },
-                    { id: "prod_3", name: "Porção de Batata Frita", category: "Porções", unit: "unidade", costPrice: 8.00, sellPrice: 25.00, stock: 25, minStock: 5 },
-                    { id: "prod_4", name: "Isca de Peixe (Tambaqui)", category: "Alimentos", unit: "unidade", costPrice: 15.00, sellPrice: 45.00, stock: 8, minStock: 5 },
-                    { id: "prod_5", name: "Refrigerante Lata", category: "Bebidas", unit: "unidade", costPrice: 2.00, sellPrice: 6.00, stock: 35, minStock: 12 }
+                    // --- PETISCOS ---
+                    { id: "prod_batata_frita_p", name: "Batata frita (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 30, stock: 0, minStock: 5 },
+                    { id: "prod_batata_frita_m", name: "Batata frita (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 40, stock: 0, minStock: 5 },
+                    { id: "prod_frango_passarinho_p", name: "Frango a passarinho (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 35, stock: 0, minStock: 5 },
+                    { id: "prod_frango_passarinho_m", name: "Frango a passarinho (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 45, stock: 0, minStock: 5 },
+                    { id: "prod_tulipa_p", name: "Tulipa (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 40, stock: 0, minStock: 5 },
+                    { id: "prod_tulipa_m", name: "Tulipa (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 65, stock: 0, minStock: 5 },
+                    { id: "prod_coxinha_frango_p", name: "Coxinha do frango (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 35, stock: 0, minStock: 5 },
+                    { id: "prod_coxinha_frango_m", name: "Coxinha do frango (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 45, stock: 0, minStock: 5 },
+                    { id: "prod_carne_passarinho_p", name: "Carne a passarinho (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 40, stock: 0, minStock: 5 },
+                    { id: "prod_carne_passarinho_m", name: "Carne a passarinho (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 55, stock: 0, minStock: 5 },
+                    { id: "prod_coracao_frango_p", name: "Coração de frango (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 35, stock: 0, minStock: 5 },
+                    { id: "prod_coracao_frango_m", name: "Coração de frango (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 45, stock: 0, minStock: 5 },
+                    { id: "prod_moela_galinha_p", name: "Moela de galinha (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 30, stock: 0, minStock: 5 },
+                    { id: "prod_moela_galinha_m", name: "Moela de galinha (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 35, stock: 0, minStock: 5 },
+                    { id: "prod_coxinha_asa_p", name: "Coxinha da asa (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 30, stock: 0, minStock: 5 },
+                    { id: "prod_coxinha_asa_m", name: "Coxinha da asa (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 35, stock: 0, minStock: 5 },
+                    { id: "prod_calabresa_p", name: "Calabresa (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 30, stock: 0, minStock: 5 },
+                    { id: "prod_calabresa_m", name: "Calabresa (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 40, stock: 0, minStock: 5 },
+                    { id: "prod_carne_suina_p", name: "Carne suína (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 35, stock: 0, minStock: 5 },
+                    { id: "prod_carne_suina_m", name: "Carne suína (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 45, stock: 0, minStock: 5 },
+                    { id: "prod_piabinha_p", name: "Piabinha (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 40, stock: 0, minStock: 5 },
+                    { id: "prod_piabinha_m", name: "Piabinha (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 55, stock: 0, minStock: 5 },
+                    { id: "prod_isca_peixe_p", name: "Isca de peixe (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 50, stock: 0, minStock: 5 },
+                    { id: "prod_isca_peixe_m", name: "Isca de peixe (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 75, stock: 0, minStock: 5 },
+                    { id: "prod_isca_carne_p", name: "Isca de carne (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 50, stock: 0, minStock: 5 },
+                    { id: "prod_isca_carne_m", name: "Isca de carne (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 70, stock: 0, minStock: 5 },
+                    { id: "prod_porcao_carne_p", name: "Porção de carne (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 50, stock: 0, minStock: 5 },
+                    { id: "prod_porcao_carne_m", name: "Porção de carne (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 60, stock: 0, minStock: 5 },
+                    { id: "prod_peixe_frito_p", name: "Peixe frito (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 50, stock: 0, minStock: 5 },
+                    { id: "prod_peixe_frito_m", name: "Peixe frito (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 70, stock: 0, minStock: 5 },
+                    { id: "prod_picanha_p", name: "Picanha (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 80, stock: 0, minStock: 5 },
+                    { id: "prod_picanha_m", name: "Picanha (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 120, stock: 0, minStock: 5 },
+                    { id: "prod_carne_sol_p", name: "Carne de sol (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 55, stock: 0, minStock: 5 },
+                    { id: "prod_carne_sol_m", name: "Carne de sol (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 65, stock: 0, minStock: 5 },
+
+                    // --- CALDOS ---
+                    { id: "prod_caldo_frango", name: "Caldo de frango", category: "Alimentos", unit: "unidade", costPrice: 0, sellPrice: 15, stock: 0, minStock: 5 },
+                    { id: "prod_caldo_verde", name: "Caldo verde", category: "Alimentos", unit: "unidade", costPrice: 0, sellPrice: 20, stock: 0, minStock: 5 },
+
+                    // --- PORÇÕES (acompanhamentos) ---
+                    { id: "prod_arroz_p", name: "Arroz (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 7, stock: 0, minStock: 5 },
+                    { id: "prod_arroz_m", name: "Arroz (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 10, stock: 0, minStock: 5 },
+                    { id: "prod_mandioca_p", name: "Mandioca cozida (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 7, stock: 0, minStock: 5 },
+                    { id: "prod_mandioca_m", name: "Mandioca cozida (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 10, stock: 0, minStock: 5 },
+                    { id: "prod_vinagrete_p", name: "Vinagrete (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 5, stock: 0, minStock: 5 },
+                    { id: "prod_vinagrete_m", name: "Vinagrete (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 8, stock: 0, minStock: 5 },
+                    { id: "prod_farofinha_p", name: "Farofinha (Pequena)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 5, stock: 0, minStock: 5 },
+                    { id: "prod_farofinha_m", name: "Farofinha (Média)", category: "Porções", unit: "unidade", costPrice: 0, sellPrice: 10, stock: 0, minStock: 5 },
+
+                    // --- SUCOS ---
+                    { id: "prod_suco_laranja", name: "Suco de laranja (copo)", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 10, stock: 0, minStock: 5 },
+                    { id: "prod_suco_acerola", name: "Suco de acerola (copo)", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 10, stock: 0, minStock: 5 },
+                    { id: "prod_suco_abacaxi", name: "Suco de abacaxi (copo)", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 10, stock: 0, minStock: 5 },
+                    { id: "prod_suco_maracuja", name: "Suco de maracujá (copo)", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 12, stock: 0, minStock: 5 },
+                    { id: "prod_suco_caja", name: "Suco de cajá (copo)", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 10, stock: 0, minStock: 5 },
+                    { id: "prod_jarra_suco", name: "Jarra de suco", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 20, stock: 0, minStock: 5 },
+
+                    // --- BEBIDAS ---
+                    { id: "prod_corona_ln", name: "Corona Long Neck", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 12, stock: 0, minStock: 5 },
+                    { id: "prod_corona_zero_ln", name: "Corona Zero Álcool Long Neck", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 12, stock: 0, minStock: 5 },
+                    { id: "prod_stela_golde_ln", name: "Stela Golde Long Neck", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 12, stock: 0, minStock: 5 },
+                    { id: "prod_51_ice_balada", name: "51 Ice Balada Long Neck 275ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 12, stock: 0, minStock: 5 },
+                    { id: "prod_heineken_ln", name: "Heineken Long Neck", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 12, stock: 0, minStock: 5 },
+                    { id: "prod_michelob_ultra", name: "Michelob Ultra Lata 350ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 8, stock: 0, minStock: 5 },
+                    { id: "prod_skol_269", name: "Skol 269ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 5, stock: 0, minStock: 5 },
+                    { id: "prod_skol_caixinha", name: "Skol 269ml (Caixinha)", category: "Bebidas", unit: "fardo", costPrice: 0, sellPrice: 50, stock: 0, minStock: 5 },
+                    { id: "prod_brahma_269", name: "Brahma 269ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 5.5, stock: 0, minStock: 5 },
+                    { id: "prod_brahma_caixinha", name: "Brahma 269ml (Caixinha)", category: "Bebidas", unit: "fardo", costPrice: 0, sellPrice: 55, stock: 0, minStock: 5 },
+                    { id: "prod_imperio_pilson_ultra", name: "Império Pilson / Ultra", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 5, stock: 0, minStock: 5 },
+                    { id: "prod_imperio_caixinha", name: "Império Pilson / Ultra (Caixinha)", category: "Bebidas", unit: "fardo", costPrice: 0, sellPrice: 50, stock: 0, minStock: 5 },
+                    { id: "prod_original_269", name: "Original 269ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 5.5, stock: 0, minStock: 5 },
+                    { id: "prod_original_caixinha", name: "Original 269ml (Caixinha)", category: "Bebidas", unit: "fardo", costPrice: 0, sellPrice: 55, stock: 0, minStock: 5 },
+                    { id: "prod_redbull_250", name: "Red Bull 250ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 15, stock: 0, minStock: 5 },
+                    { id: "prod_extra_power_270", name: "Extra Power 270ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 10, stock: 0, minStock: 5 },
+                    { id: "prod_h2o_limoneto_500", name: "H2O Limoneto 500ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 7, stock: 0, minStock: 5 },
+                    { id: "prod_coca_2l", name: "Coca-Cola 2L", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 16, stock: 0, minStock: 5 },
+                    { id: "prod_agua_mineral_500", name: "Água Mineral 500ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 3.5, stock: 0, minStock: 5 },
+                    { id: "prod_coca_lata_350", name: "Coca-Cola Lata 350ml", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 7, stock: 0, minStock: 5 },
+                    { id: "prod_agua_coco", name: "Água de Coco", category: "Bebidas", unit: "unidade", costPrice: 0, sellPrice: 10, stock: 0, minStock: 5 }
                 ];
 
                 const today = new Date();
