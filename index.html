@@ -1570,7 +1570,7 @@
                 const products = SamaumaStore.get('products', []);
                 // Verifica se há alguma venda contendo o produto
                 const sales = SamaumaStore.get('sales', []);
-                const isUsed = sales.some(sale => sale.items.some(item => item.productId === id));
+                const isUsed = sales.some(sale => sale.status !== 'cancelled' && sale.items.some(item => item.productId === id));
                 
                 if (isUsed) {
                     throw new Error("Este produto não pode ser excluído pois já possui histórico de vendas.");
@@ -1760,8 +1760,16 @@
                 if (sale && sale.status === 'open' && sale.estoqueBaixado) {
                     sale.items.forEach(i => SamaumaStore.ajustarEstoque(i.productId, i.quantity));
                 }
-                const filtered = sales.filter(s => s.id !== saleId);
-                SamaumaStore.set('sales', filtered);
+                if (sale && sale.status === 'open' && sale.items.length > 0) {
+                    // Fica registrada como cancelada (com quem cancelou) para o gestor poder conferir
+                    sale.status = 'cancelled';
+                    sale.canceladoPor = (AuthSystem.current && AuthSystem.current.name) || '';
+                    sale.canceladoEm = new Date().toISOString();
+                    SamaumaStore.set('sales', sales);
+                } else {
+                    // Comanda vazia (aberta por engano): some sem deixar rastro
+                    SamaumaStore.set('sales', sales.filter(s => s.id !== saleId));
+                }
             }
 
             static finalizeSale(saleId, paymentMethod, discount = 0) {
@@ -2816,6 +2824,7 @@
 
             const fechadas = vendas.filter(v => v.status === 'closed' && doDia(v.date)).sort((a, b) => new Date(a.date) - new Date(b.date));
             const abertas = vendas.filter(v => v.status === 'open');
+            const canceladas = vendas.filter(v => v.status === 'cancelled' && doDia(v.canceladoEm)).sort((a, b) => new Date(a.canceladoEm) - new Date(b.canceladoEm));
             const porPagamento = {}, porItem = {}, porCategoria = {}, porPessoa = {};
             fechadas.forEach(v => {
                 const pessoa = v.abertoPor || v.fechadoPor || 'Não registrado';
@@ -2838,7 +2847,7 @@
             const total = fechadas.reduce((t, v) => t + v.totalAmount, 0);
             const descontos = fechadas.reduce((t, v) => t + (v.discount || 0), 0);
             const saidas = transacoes.filter(t => t.type !== 'entrada' && doDia(t.date)).reduce((t, x) => t + x.amount, 0);
-            return { dia, fechadas, abertas, porPagamento, porItem, porCategoria, porPessoa, total, descontos, saidas,
+            return { dia, fechadas, abertas, canceladas, porPagamento, porItem, porCategoria, porPessoa, total, descontos, saidas,
                      ticket: fechadas.length ? total / fechadas.length : 0 };
         }
 
@@ -2861,6 +2870,7 @@
                     ${resumo('Descontos dados', formatCurrency(r.descontos))}
                     ${resumo('Saídas do dia', formatCurrency(r.saidas))}
                     ${resumo('Saldo do dia', formatCurrency(r.total - r.saidas))}
+                    ${resumo('Comandas canceladas', r.canceladas.length)}
                 </div>
                 ${r.abertas.length ? `<div class="rel-aviso">Atenção: ${r.abertas.length} comanda(s) ainda aberta(s), no valor de ${formatCurrency(r.abertas.reduce((t, v) => t + v.totalAmount, 0))}. Elas só entram no relatório depois de fechadas.</div>` : ''}
 
@@ -2878,6 +2888,9 @@
 
                 <h3>Vendas do dia</h3>
                 ${tabela(['Hora', 'Cliente / comanda', 'Atendente', 'Fechou', 'Pagamento', 'Itens', 'Valor'], r.fechadas.map(v => `<tr><td>${formatTime(v.date)}</td><td>${esc(v.customerName)}</td><td>${esc(v.abertoPor || '-')}</td><td>${esc(v.fechadoPor || '-')}</td><td>${esc(v.paymentMethod || '-')}</td><td class="num">${v.items.reduce((t, i) => t + i.quantity, 0)}</td><td class="num">${formatCurrency(v.totalAmount)}</td></tr>`))}
+
+                ${r.canceladas.length ? `<h3>Comandas canceladas</h3>
+                ${tabela(['Hora', 'Cliente / comanda', 'Atendente', 'Cancelou', 'Itens', 'Valor'], r.canceladas.map(v => `<tr><td>${formatTime(v.canceladoEm)}</td><td>${esc(v.customerName)}</td><td>${esc(v.abertoPor || '-')}</td><td>${esc(v.canceladoPor || '-')}</td><td class="num">${v.items.reduce((t, i) => t + i.quantity, 0)}</td><td class="num">${formatCurrency(v.totalAmount)}</td></tr>`))}` : ''}
             `;
             document.getElementById('relatorio-dia-corpo').innerHTML = html;
         }
