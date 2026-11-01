@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <script>try{if(localStorage.getItem('samauma_tema')!=='claro')document.documentElement.classList.add('dark')}catch(e){document.documentElement.classList.add('dark')}</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -71,6 +72,57 @@
         body[data-role="vendas"] .somente-gestao { display: none !important; }
         body[data-role="vendas"] #tab-estoque table th:nth-child(4),
         body[data-role="vendas"] #tab-estoque table td:nth-child(4) { display: none; }
+        /* Cards de indicadores em degradê (iguais nos dois temas) */
+        .kpi-card { border-radius: 16px; padding: 18px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.14); }
+        .kpi-verde { background: linear-gradient(135deg, #0f9d6e, #2ee59d); color: #04241a; }
+        .kpi-vermelho { background: linear-gradient(135deg, #c81e45, #ff6b7a); color: #ffffff; }
+        .kpi-ciano { background: linear-gradient(135deg, #0891b2, #22d3ee); color: #032a33; }
+        .kpi-ambar { background: linear-gradient(135deg, #d97706, #fbbf24); color: #2a1700; }
+        .kpi-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; opacity: .8; }
+        .kpi-valor { font-size: 1.5rem; font-weight: 800; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .kpi-neg { color: #7f1d1d; }
+        .kpi-tag { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.14); }
+        .kpi-tag-neg { background: #7f1d1d; color: #ffffff; }
+        .kpi-ico { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,.28); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+
+        /* ===== Tema escuro (paleta neon floresta) ===== */
+        html.dark { color-scheme: dark; }
+        html.dark body { background: #07120c; color: #e8fff4; }
+        html.dark .card { background: #10241a; border-color: #1c3a2b; box-shadow: none; }
+        html.dark .bg-white { background-color: #10241a; }
+        html.dark .bg-slate-50 { background-color: #0b1a12; }
+        html.dark .bg-slate-100 { background-color: #163226; }
+        html.dark .bg-slate-200 { background-color: #1c3a2b; }
+        html.dark .hover\:bg-slate-50:hover { background-color: #163226; }
+        html.dark .hover\:bg-slate-100:hover { background-color: #1c3a2b; }
+        html.dark .hover\:bg-slate-200:hover { background-color: #244a38; }
+        html.dark .border-slate-50, html.dark .border-slate-100, html.dark .border-slate-200, html.dark .border-slate-300 { border-color: #1c3a2b; }
+        html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #1c3a2b; }
+        html.dark .text-slate-900, html.dark .text-slate-800, html.dark .text-slate-700, html.dark .text-slate-850 { color: #e8fff4; }
+        html.dark .text-slate-600 { color: #b9d6c6; }
+        html.dark .text-slate-500 { color: #8fb59a; }
+        html.dark .text-slate-400 { color: #7aa38d; }
+        html.dark .text-slate-300 { color: #55806a; }
+        html.dark .text-samauma-600, html.dark .text-samauma-700, html.dark .text-samauma-800 { color: #2ee59d; }
+        html.dark .bg-samauma-100 { background-color: rgba(46,229,157,.14); }
+        html.dark .bg-emerald-50, html.dark .bg-emerald-100 { background-color: rgba(46,229,157,.14); }
+        html.dark .text-emerald-600, html.dark .text-emerald-700, html.dark .text-emerald-800 { color: #5ff0b6; }
+        html.dark .bg-rose-50, html.dark .bg-rose-100, html.dark .bg-red-50, html.dark .bg-red-100 { background-color: rgba(255,77,94,.16); }
+        html.dark .text-rose-600, html.dark .text-rose-700, html.dark .text-rose-800, html.dark .text-red-600, html.dark .text-red-700, html.dark .text-red-800 { color: #ff8a97; }
+        html.dark .hover\:bg-rose-100:hover, html.dark .hover\:bg-red-100:hover { background-color: rgba(255,77,94,.26); }
+        html.dark .bg-amber-50, html.dark .bg-amber-100 { background-color: rgba(251,191,36,.14); }
+        html.dark .text-amber-600, html.dark .text-amber-700, html.dark .text-amber-800 { color: #fcd34d; }
+        html.dark .border-amber-200 { border-color: #5a4a1a; }
+        html.dark .bg-cyan-50, html.dark .bg-sky-50, html.dark .bg-blue-50 { background-color: rgba(34,211,238,.14); }
+        html.dark .text-cyan-600, html.dark .text-blue-600 { color: #67e8f9; }
+        html.dark .hover\:bg-blue-50:hover { background-color: rgba(34,211,238,.22); }
+        html.dark input, html.dark select, html.dark textarea { background-color: #0b1a12; color: #e8fff4; border-color: #1c3a2b; }
+        html.dark input::placeholder, html.dark textarea::placeholder { color: #6f9582; }
+        html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #2a4a3a; }
+        html.dark #login-form { background: #10241a; }
+        html.dark #login-users .bg-samauma-950 { background: #163226; border-color: #2ee59d; }
+        html.dark #pos-menu-categories .bg-samauma-950 { background: #2ee59d; color: #04241a; border-color: #2ee59d; }
+        html.dark .menu-card:hover { border-color: #2ee59d; box-shadow: 0 4px 14px rgba(46,229,157,.12); }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
     </style>
 </head>
@@ -140,7 +192,7 @@
                     <p id="user-name" class="text-sm font-semibold text-white truncate"></p>
                     <p id="user-role" class="text-[11px] text-samauma-300"></p>
                 </div>
-                <button onclick="AuthSystem.logout()" class="text-samauma-200 hover:text-white hover:bg-samauma-900 px-3 py-2 rounded-lg" title="Sair" aria-label="Sair"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <div class="flex flex-shrink-0"><button onclick="toggleTheme()" class="text-samauma-200 hover:text-white hover:bg-samauma-900 px-3 py-2 rounded-lg" title="Tema claro/escuro" aria-label="Alternar tema claro ou escuro"><i class="fa-solid fa-circle-half-stroke"></i></button><button onclick="AuthSystem.logout()" class="text-samauma-200 hover:text-white hover:bg-samauma-900 px-3 py-2 rounded-lg" title="Sair" aria-label="Sair"><i class="fa-solid fa-right-from-bracket"></i></button></div>
             </div>
         </div>
     </aside>
@@ -155,6 +207,7 @@
         </div>
         <div class="flex items-center gap-3">
             <span id="user-name-m" class="text-[11px] text-samauma-200"></span>
+            <button onclick="toggleTheme()" class="text-samauma-200 p-2" title="Tema claro/escuro" aria-label="Alternar tema claro ou escuro"><i class="fa-solid fa-circle-half-stroke"></i></button>
             <button onclick="AuthSystem.logout()" class="text-samauma-200 p-2" title="Sair" aria-label="Sair"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
     </header>
@@ -213,37 +266,37 @@
 
             <!-- Balanço Financeiro Cards -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                <div class="card p-5 flex items-start justify-between gap-3">
+                <div class="kpi-card kpi-verde">
                     <div class="min-w-0">
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Faturamento</p>
-                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1.5 truncate" id="dash-entradas">R$ 0,00</h3>
-                        <span class="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block"><i class="fa-solid fa-arrow-up"></i> Vendas concluídas</span>
+                        <p class="kpi-label">Faturamento</p>
+                        <h3 class="kpi-valor" id="dash-entradas">R$ 0,00</h3>
+                        <span class="kpi-tag"><i class="fa-solid fa-arrow-up"></i> Vendas concluídas</span>
                     </div>
-                    <div class="kpi-icon bg-emerald-50 text-emerald-600"><i class="fa-solid fa-circle-dollar-to-slot"></i></div>
+                    <div class="kpi-ico"><i class="fa-solid fa-circle-dollar-to-slot"></i></div>
                 </div>
-                <div class="card p-5 flex items-start justify-between gap-3">
+                <div class="kpi-card kpi-vermelho">
                     <div class="min-w-0">
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Saídas e despesas</p>
-                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1.5 truncate" id="dash-saidas">R$ 0,00</h3>
-                        <span class="text-[11px] text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block"><i class="fa-solid fa-arrow-down"></i> Custos pagos</span>
+                        <p class="kpi-label">Saídas e despesas</p>
+                        <h3 class="kpi-valor" id="dash-saidas">R$ 0,00</h3>
+                        <span class="kpi-tag"><i class="fa-solid fa-arrow-down"></i> Custos pagos</span>
                     </div>
-                    <div class="kpi-icon bg-rose-50 text-rose-600"><i class="fa-solid fa-receipt"></i></div>
+                    <div class="kpi-ico"><i class="fa-solid fa-receipt"></i></div>
                 </div>
-                <div class="card p-5 flex items-start justify-between gap-3">
+                <div class="kpi-card kpi-ciano">
                     <div class="min-w-0">
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Saldo em caixa</p>
-                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1.5 truncate" id="dash-saldo">R$ 0,00</h3>
-                        <span class="text-[11px] text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block"><i class="fa-solid fa-scale-balanced"></i> Entradas − saídas</span>
+                        <p class="kpi-label">Saldo em caixa</p>
+                        <h3 class="kpi-valor" id="dash-saldo">R$ 0,00</h3>
+                        <span class="kpi-tag"><i class="fa-solid fa-scale-balanced"></i> Entradas − saídas</span>
                     </div>
-                    <div class="kpi-icon bg-sky-50 text-sky-600"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="kpi-ico"><i class="fa-solid fa-wallet"></i></div>
                 </div>
-                <div class="card p-5 flex items-start justify-between gap-3">
+                <div class="kpi-card kpi-ambar">
                     <div class="min-w-0">
-                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Lucro operacional</p>
-                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1.5 truncate" id="dash-lucro">R$ 0,00</h3>
-                        <span id="dash-lucro-badge" class="text-[11px] text-samauma-800 bg-samauma-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block" title="Faturamento menos o custo dos produtos vendidos (CMV) e as despesas operacionais.">Lucratividade: 0%</span>
+                        <p class="kpi-label">Lucro operacional</p>
+                        <h3 class="kpi-valor" id="dash-lucro">R$ 0,00</h3>
+                        <span id="dash-lucro-badge" class="kpi-tag" title="Faturamento menos o custo dos produtos vendidos (CMV) e as despesas operacionais.">Lucratividade: 0%</span>
                     </div>
-                    <div class="kpi-icon bg-amber-50 text-amber-600"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                    <div class="kpi-ico"><i class="fa-solid fa-hand-holding-dollar"></i></div>
                 </div>
             </div>
 
@@ -1866,6 +1919,12 @@
         let chartCashflowInstance = null;
         let chartTopProductsInstance = null;
 
+        function toggleTheme() {
+            const escuro = document.documentElement.classList.toggle('dark');
+            try { localStorage.setItem('samauma_tema', escuro ? 'escuro' : 'claro'); } catch (e) { /* sem armazenamento: vale só nesta sessão */ }
+            atualizarTelaAtual(); // redesenha os gráficos com as cores do tema
+        }
+
         let _timerAtualizacao = null;
         function atualizarTelaAtual() {
             clearTimeout(_timerAtualizacao);
@@ -1946,16 +2005,16 @@
             const margemLucro = stats.entradas > 0 ? (stats.lucroEstimado / stats.entradas) * 100 : 0;
             document.getElementById('dash-lucro-badge').innerText = `Lucratividade: ${margemLucro.toFixed(1)}%`;
             if (stats.lucroEstimado < 0) {
-                document.getElementById('dash-lucro-badge').className = "text-[10px] text-red-800 bg-red-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block";
+                document.getElementById('dash-lucro-badge').className = "kpi-tag kpi-tag-neg";
             } else {
-                document.getElementById('dash-lucro-badge').className = "text-[10px] text-samauma-800 bg-samauma-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block";
+                document.getElementById('dash-lucro-badge').className = "kpi-tag";
             }
 
             // Ajusta o card de saldo em caixa
             if (stats.saldo < 0) {
-                document.getElementById('dash-saldo').className = "text-2xl font-black text-rose-600 mt-1";
+                document.getElementById('dash-saldo').className = "kpi-valor kpi-neg";
             } else {
-                document.getElementById('dash-saldo').className = "text-2xl font-black text-slate-800 mt-1";
+                document.getElementById('dash-saldo').className = "kpi-valor";
             }
 
             // Alerta de estoque crítico desativado por enquanto (estoque/mínimo ainda não é cadastrado nos produtos)
@@ -2031,6 +2090,9 @@
         }
 
         function renderDashboardCharts(stats) {
+            const escuro = document.documentElement.classList.contains('dark');
+            Chart.defaults.color = escuro ? '#9cc4ad' : '#64748b';
+            Chart.defaults.borderColor = escuro ? 'rgba(156,196,173,.16)' : 'rgba(100,116,139,.18)';
             // Chart 1: Fluxo de Caixa Diário (Últimos 10 dias de transações)
             const transactions = SamaumaStore.get('transactions', []);
             const last10Days = [];
