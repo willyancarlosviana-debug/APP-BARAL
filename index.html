@@ -402,7 +402,7 @@
                             <thead class="bg-slate-50 text-slate-500 uppercase text-[10px]">
                                 <tr>
                                     <th class="py-2 px-3">Hora</th>
-                                    <th class="py-2 px-3">Cliente / Mesa</th>
+                                    <th class="py-2 px-3">Cliente / Comanda</th>
                                     <th class="py-2 px-3 text-center">Pagamento</th>
                                     <th class="py-2 px-3 text-right">Valor</th>
                                 </tr>
@@ -425,7 +425,7 @@
                     <div>
                         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                             <i class="fa-solid fa-utensils text-samauma-600"></i>
-                            Mesas & Comandas
+                            Comandas
                         </h2>
                         <p class="text-xs text-slate-500">Gerenciamento de atendimentos ativos no balneário</p>
                     </div>
@@ -434,7 +434,7 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                                 <i class="fa-solid fa-magnifying-glass text-xs"></i>
                             </span>
-                            <input type="text" id="comanda-search" oninput="renderVendas()" placeholder="Buscar mesa/comanda..." class="w-full sm:w-60 pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none">
+                            <input type="text" id="comanda-search" oninput="renderVendas()" placeholder="Buscar comanda..." class="w-full sm:w-60 pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none">
                         </div>
                         <button onclick="openModal('modal-abrir-comanda')" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm whitespace-nowrap">
                             <i class="fa-solid fa-plus"></i> Abrir Atendimento
@@ -463,8 +463,8 @@
                     <!-- Top Order Metadata -->
                     <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
                         <div>
-                            <span class="bg-samauma-100 text-samauma-800 text-[10px] font-bold px-2 py-0.5 rounded-full" id="pos-client-type">Mesa</span>
-                            <h2 class="text-lg font-black text-slate-800 mt-0.5" id="pos-client-name">Mesa 01</h2>
+                            <span class="bg-samauma-100 text-samauma-800 text-[10px] font-bold px-2 py-0.5 rounded-full" id="pos-client-type">Comanda</span>
+                            <h2 class="text-lg font-black text-slate-800 mt-0.5" id="pos-client-name">Comanda 01</h2>
                             <p class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                                 <i class="fa-regular fa-clock"></i> Aberta às <span id="pos-open-time">--:--</span>
                             </p>
@@ -515,7 +515,7 @@
                 <div id="pos-painel-cardapio" class="order-1 lg:order-2 lg:col-span-7 space-y-4 flex flex-col">
                     <!-- Celular: voltar para a mesa, com o resumo do que já foi lançado -->
                     <button onclick="mostrarTelaPOS('comanda')" class="lg:hidden w-full flex items-center justify-between gap-2 bg-samauma-700 hover:bg-samauma-800 text-white rounded-xl px-4 py-3 text-sm font-bold">
-                        <span><i class="fa-solid fa-arrow-left mr-2"></i> Voltar à mesa</span>
+                        <span><i class="fa-solid fa-arrow-left mr-2"></i> Voltar à comanda</span>
                         <span id="pos-voltar-resumo" class="font-medium text-xs opacity-90"></span>
                     </button>
                     <!-- Search and Categories -->
@@ -893,26 +893,25 @@
         </div>
         <form onsubmit="handleAbrirComanda(event)" class="space-y-4 mt-4">
             <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Tipo de Cliente</label>
-                <div class="grid grid-cols-3 gap-2">
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Tipo de atendimento</label>
+                <div class="grid grid-cols-2 gap-2">
                     <label class="border border-slate-200 rounded-lg p-2.5 flex flex-col items-center gap-1 cursor-pointer hover:bg-slate-50 transition-colors select-none text-center">
-                        <input type="radio" name="customerType" value="Mesa" checked class="accent-samauma-600">
-                        <span class="text-xs font-bold text-slate-700 mt-1">Mesa</span>
-                    </label>
-                    <label class="border border-slate-200 rounded-lg p-2.5 flex flex-col items-center gap-1 cursor-pointer hover:bg-slate-50 transition-colors select-none text-center">
-                        <input type="radio" name="customerType" value="Comanda" class="accent-samauma-600">
+                        <input type="radio" name="customerType" value="Comanda" checked onchange="atualizarTipoAtendimento()" class="accent-samauma-600">
                         <span class="text-xs font-bold text-slate-700 mt-1">Comanda</span>
                     </label>
                     <label class="border border-slate-200 rounded-lg p-2.5 flex flex-col items-center gap-1 cursor-pointer hover:bg-slate-50 transition-colors select-none text-center">
-                        <input type="radio" name="customerType" value="Avulso" class="accent-samauma-600">
+                        <input type="radio" name="customerType" value="Avulso" onchange="atualizarTipoAtendimento()" class="accent-samauma-600">
                         <span class="text-xs font-bold text-slate-700 mt-1">Avulso</span>
                     </label>
                 </div>
             </div>
-            <div>
-                <label for="comanda-number-name" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Identificação / Número</label>
-                <input type="text" id="comanda-number-name" required placeholder="Ex: Mesa 12 ou Comanda 104" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
+            <div id="comanda-identificacao-wrap">
+                <label for="comanda-number-name" class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nome da pessoa ou número da mesa</label>
+                <input type="text" id="comanda-number-name" required placeholder="Ex: Nicotina, Mesa 12 ou Comanda 104" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-samauma-500 focus:outline-none">
             </div>
+            <p id="avulso-aviso" class="hidden text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
+                Venda avulsa, identificada sempre como <b>Caixa</b>.
+            </p>
             <div class="flex gap-2 pt-2">
                 <button type="button" onclick="closeModal('modal-abrir-comanda')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs transition-colors">Cancelar</button>
                 <button type="submit" class="w-1/2 bg-samauma-700 hover:bg-samauma-800 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-sm">Iniciar Atendimento</button>
@@ -2833,7 +2832,7 @@
                 ${tabela(['Item', 'Quantidade', 'Valor'], Object.entries(r.porItem).sort((a, b) => b[1].qtd - a[1].qtd).map(([nome, d]) => `<tr><td>${esc(nome)}</td><td class="num">${d.qtd}</td><td class="num">${formatCurrency(d.valor)}</td></tr>`))}
 
                 <h3>Vendas do dia</h3>
-                ${tabela(['Hora', 'Cliente / mesa', 'Pagamento', 'Itens', 'Valor'], r.fechadas.map(v => `<tr><td>${formatTime(v.date)}</td><td>${esc(v.customerName)}</td><td>${esc(v.paymentMethod || '-')}</td><td class="num">${v.items.reduce((t, i) => t + i.quantity, 0)}</td><td class="num">${formatCurrency(v.totalAmount)}</td></tr>`))}
+                ${tabela(['Hora', 'Cliente / comanda', 'Pagamento', 'Itens', 'Valor'], r.fechadas.map(v => `<tr><td>${formatTime(v.date)}</td><td>${esc(v.customerName)}</td><td>${esc(v.paymentMethod || '-')}</td><td class="num">${v.items.reduce((t, i) => t + i.quantity, 0)}</td><td class="num">${formatCurrency(v.totalAmount)}</td></tr>`))}
             `;
             document.getElementById('relatorio-dia-corpo').innerHTML = html;
         }
@@ -2847,7 +2846,7 @@
             const r = dadosRelatorioDia();
             const num = v => String(v).replace('.', ',');
             let csv = 'data:text/csv;charset=utf-8,\uFEFF';
-            csv += 'Data;Hora;Cliente/Mesa;Pagamento;Item;Quantidade;Valor unitario;Subtotal;Desconto da venda\n';
+            csv += 'Data;Hora;Cliente/Comanda;Pagamento;Item;Quantidade;Valor unitario;Subtotal;Desconto da venda\n';
             r.fechadas.forEach(v => {
                 v.items.forEach((i, idx) => {
                     csv += `"${formatDateBR(r.dia)}";"${formatTime(v.date)}";"${String(v.customerName).replace(/"/g, '""')}";"${v.paymentMethod || ''}";"${String(i.name).replace(/"/g, '""')}";${i.quantity};${num(i.sellPrice)};${num((i.sellPrice * i.quantity).toFixed(2))};${idx === 0 ? num(v.discount || 0) : 0}\n`;
@@ -3079,7 +3078,7 @@
                     csvContent += `"${p.name}";"${p.category}";"${p.unit}";${p.costPrice.toString().replace('.', ',')};${p.sellPrice.toString().replace('.', ',')};${p.stock};${p.minStock}\n`;
                 });
             } else if (type === 'vendas') {
-                csvContent += "ID Venda;Data;Cliente/Mesa;Metodo Pagamento;Total Venda;Qtd Itens\n";
+                csvContent += "ID Venda;Data;Cliente/Comanda;Metodo Pagamento;Total Venda;Qtd Itens\n";
                 const sales = SamaumaStore.get('sales').filter(s => s.status === 'closed');
                 sales.forEach(s => {
                     const qty = s.items.reduce((sum, i) => sum + i.quantity, 0);
@@ -3131,16 +3130,28 @@
         }
 
         // --- FORM HANDLERS ---
+        // Avulso é sempre "Caixa": esconde o campo de nome. Comanda pede o nome ou o número da mesa.
+        function atualizarTipoAtendimento() {
+            const avulso = document.querySelector('input[name="customerType"]:checked').value === 'Avulso';
+            const campo = document.getElementById('comanda-number-name');
+            document.getElementById('comanda-identificacao-wrap').classList.toggle('hidden', avulso);
+            document.getElementById('avulso-aviso').classList.toggle('hidden', !avulso);
+            campo.required = !avulso;
+            if (!avulso) campo.focus();
+        }
+
         function handleAbrirComanda(e) {
             e.preventDefault();
             const type = document.querySelector('input[name="customerType"]:checked').value;
-            const name = document.getElementById('comanda-number-name').value.trim();
+            const name = type === 'Avulso' ? 'Caixa' : document.getElementById('comanda-number-name').value.trim();
 
             if (!name) return;
 
             SamaumaController.startNewSale(type, name);
             closeModal('modal-abrir-comanda');
             document.getElementById('comanda-number-name').value = '';
+            document.querySelector('input[name="customerType"][value="Comanda"]').checked = true;
+            atualizarTipoAtendimento();
             showToast("Atendimento aberto!", "success");
         }
 
@@ -3279,6 +3290,10 @@
 
         // --- GERENCIADOR DE MODAIS ---
         function openModal(id) {
+            if (id === 'modal-abrir-comanda') {
+                document.querySelector('input[name="customerType"][value="Comanda"]').checked = true;
+                atualizarTipoAtendimento();
+            }
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById(id).classList.remove('hidden');
             
