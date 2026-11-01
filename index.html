@@ -1293,13 +1293,37 @@
                         }
                     } catch (e) {
                         console.warn('Falha ao sincronizar', tabela, e);
-                        if (!this.avisouErro) {
-                            this.avisouErro = true;
-                            showToast('Não foi possível salvar no servidor. Verifique a internet e tente de novo.', 'error');
-                            setTimeout(() => { this.avisouErro = false; }, 15000);
-                        }
+                        this.avisarFalha();
                     }
                 });
+            }
+
+            static avisarFalha() {
+                if (this.avisouErro) return;
+                this.avisouErro = true;
+                showToast('Não foi possível salvar no servidor. Verifique a internet e tente de novo.', 'error');
+                setTimeout(() => { this.avisouErro = false; }, 15000);
+            }
+
+            // Muda o estoque de um produto: atualiza na hora neste aparelho e manda só a diferença ao banco.
+            // Funciona para todos os perfis (a função do banco só soma ou subtrai quantidade, nada mais).
+            static ajustarEstoque(id, delta) {
+                const produtos = this.get('products', []);
+                const prod = produtos.find(p => p.id === id);
+                if (!prod || !delta) return;
+                prod.stock = parseFloat(((Number(prod.stock) || 0) + delta).toFixed(2));
+                localStorage.setItem('samauma_products', JSON.stringify(produtos));
+                if (this.remoto) {
+                    this.fila = this.fila.then(async () => {
+                        try {
+                            const { error } = await this.remoto.rpc('ajustar_estoque', { p_id: id, p_delta: delta });
+                            if (error) throw error;
+                        } catch (e) {
+                            console.warn('Falha ao ajustar estoque', e);
+                            this.avisarFalha();
+                        }
+                    });
+                }
             }
 
             // Baixa tudo do banco para o navegador (ao entrar)
@@ -1613,6 +1637,7 @@
                     totalAmount: 0,
                     discount: 0,
                     paymentMethod: "",
+                    estoqueBaixado: true, // regra nova: o estoque baixa quando o item é lançado na comanda
                     status: "open"
                 };
                 sales.push(newOrder);
@@ -1640,11 +1665,13 @@
                         sellPrice: product.sellPrice
                     });
                 }
-                
+
                 // Recalcula total da comanda
                 sale.totalAmount = parseFloat(sale.items.reduce((sum, item) => sum + (item.sellPrice * item.quantity), 0).toFixed(2));
-                
+
                 SamaumaStore.set('sales', sales);
+                // Item entregue: sai do estoque agora (só em comandas abertas com a regra nova)
+                if (sale.estoqueBaixado) SamaumaStore.ajustarEstoque(productId, -quantity);
                 return sale;
             }
 
@@ -1656,6 +1683,7 @@
                 const item = sale.items.find(i => i.productId === productId);
                 if (!item) return;
 
+                const qtdAntes = item.quantity;
                 if (newQty <= 0) {
                     sale.items = sale.items.filter(i => i.productId !== productId);
                 } else {
@@ -1664,6 +1692,8 @@
 
                 sale.totalAmount = parseFloat(sale.items.reduce((sum, item) => sum + (item.sellPrice * item.quantity), 0).toFixed(2));
                 SamaumaStore.set('sales', sales);
+                // Diminuir ou remover devolve ao estoque; aumentar baixa mais
+                if (sale.estoqueBaixado) SamaumaStore.ajustarEstoque(productId, qtdAntes - Math.max(newQty, 0));
                 return sale;
             }
 
@@ -1673,28 +1703,27 @@
 
             static cancelSaleOrder(saleId) {
                 const sales = SamaumaStore.get('sales', []);
+                const sale = sales.find(s => s.id === saleId);
+                // Comanda cancelada: tudo o que foi lançado volta ao estoque
+                if (sale && sale.status === 'open' && sale.estoqueBaixado) {
+                    sale.items.forEach(i => SamaumaStore.ajustarEstoque(i.productId, i.quantity));
+                }
                 const filtered = sales.filter(s => s.id !== saleId);
                 SamaumaStore.set('sales', filtered);
             }
 
             static finalizeSale(saleId, paymentMethod, discount = 0) {
                 const sales = SamaumaStore.get('sales', []);
-                const products = SamaumaStore.get('products', []);
                 const sale = sales.find(s => s.id === saleId);
 
                 if (!sale) throw new Error("Venda não encontrada.");
                 if (sale.items.length === 0) throw new Error("A comanda está vazia.");
 
-                // 1. Validar e baixar estoque de cada produto
-                sale.items.forEach(item => {
-                    const prod = products.find(p => p.id === item.productId);
-                    if (prod) {
-                        if (prod.stock < item.quantity) {
-                            console.warn(`Estoque do produto ${prod.name} ficou negativo.`);
-                        }
-                        prod.stock = parseFloat((prod.stock - item.quantity).toFixed(2));
-                    }
-                });
+                // 1. Estoque: nas comandas novas ele já saiu quando cada item foi lançado.
+                // Comandas antigas (sem a marca estoqueBaixado) seguem a regra antiga: baixa ao fechar a conta.
+                if (!sale.estoqueBaixado) {
+                    sale.items.forEach(item => SamaumaStore.ajustarEstoque(item.productId, -item.quantity));
+                }
 
                 // 2. Atualizar dados da venda
                 sale.status = "closed";
@@ -1703,8 +1732,6 @@
                 sale.totalAmount = parseFloat((sale.totalAmount - sale.discount).toFixed(2));
                 sale.date = new Date().toISOString();
 
-                // Salva produtos e vendas atualizados
-                SamaumaStore.set('products', products);
                 SamaumaStore.set('sales', sales);
 
                 // 3. Criar Transação de Entrada Financeira
