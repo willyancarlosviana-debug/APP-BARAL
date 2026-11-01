@@ -20,6 +20,7 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
                     colors: {
                         samauma: {
                             50: '#f2f7f3',
@@ -43,87 +44,151 @@
         }
     </script>
     <!-- FontAwesome v6 Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f3f4f6;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
+        body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5d0; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9fb1a6; }
+        .nav-btn { color: #a9c4b1; transition: background .15s, color .15s; }
+        .nav-btn:hover { background: #1d3224; color: #fff; }
+        .nav-btn.nav-active { background: #263f2d; color: #fff; box-shadow: inset 3px 0 0 #df9c3c; }
+        .mnav-btn { color: #8fb59a; }
+        .mnav-btn.nav-active { color: #df9c3c; }
+        .card { background: #fff; border-radius: 16px; border: 1px solid #e3ece6; box-shadow: 0 1px 2px rgba(14,27,18,.04); }
+        .kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .menu-card { transition: border-color .15s, box-shadow .15s, transform .1s; }
+        .menu-card:hover { border-color: #759b7d; box-shadow: 0 4px 12px rgba(14,27,18,.08); }
+        .menu-card:active { transform: scale(.99); }
+        /* Perfil "vendas": estoque só para consulta (sem botões de gestão nem preço de custo) */
+        body[data-role="vendas"] .somente-gestao { display: none !important; }
+        body[data-role="vendas"] #tab-estoque table th:nth-child(4),
+        body[data-role="vendas"] #tab-estoque table td:nth-child(4) { display: none; }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
     </style>
 </head>
-<body class="bg-samauma-50 font-sans text-slate-800 min-h-screen flex flex-col custom-scrollbar">
+<body class="bg-samauma-50 font-sans text-slate-800 min-h-screen custom-scrollbar">
+  <!-- TELA DE LOGIN -->
+  <div id="login-screen" class="fixed inset-0 z-50 bg-samauma-950 p-4 overflow-y-auto" style="display:none">
+    <div class="w-full max-w-sm mx-auto min-h-full flex flex-col justify-center py-6">
+      <div class="flex flex-col items-center text-center mb-6">
+        <div class="h-24 w-24 rounded-full overflow-hidden border-2 border-samauma-500 bg-white mb-3">
+          <img src="Logo%20definida.jpeg" alt="Logo Balneário Samaúma" class="h-full w-full object-cover">
+        </div>
+        <h1 class="text-xl font-extrabold tracking-wide text-samauma-100">BALNEÁRIO SAMAÚMA</h1>
+        <p class="text-xs text-samauma-300 mt-1">Gestão operacional e financeira</p>
+      </div>
+      <form id="login-form" onsubmit="AuthSystem.submit(event)" class="bg-samauma-50 rounded-2xl p-5 space-y-4 shadow-xl">
+        <div>
+          <p class="text-xs font-semibold text-slate-500 mb-2">Quem é você?</p>
+          <div id="login-users" class="grid grid-cols-1 gap-2"></div>
+        </div>
+        <div id="login-pass-wrap" class="hidden space-y-2.5">
+          <p id="login-hint" class="text-xs text-slate-500"></p>
+          <input type="password" id="login-pass" autocomplete="current-password" placeholder="Senha" class="w-full px-3 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-samauma-500 focus:outline-none">
+          <input type="password" id="login-pass2" autocomplete="new-password" placeholder="Repita a senha" class="hidden w-full px-3 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-samauma-500 focus:outline-none">
+        </div>
+        <label class="flex items-center gap-2 text-xs text-slate-500">
+          <input type="checkbox" id="login-remember" checked class="rounded"> Manter conectado neste aparelho
+        </label>
+        <p id="login-error" class="hidden text-xs font-semibold text-red-600" role="alert"></p>
+        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">Entrar</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Application Content -->
-  <div id="app-content">
+  <div id="app-content" class="md:pl-64 min-h-screen flex flex-col pb-20 md:pb-0" style="display:none">
 
-    <!-- HEADER / NAVIGATION -->
-    <header class="bg-samauma-950 text-white shadow-md sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center py-3 md:py-4 gap-4">
-                <!-- Brand Logo & Title -->
-                <div class="flex items-center gap-3">
-                    <div class="h-12 w-12 rounded-full overflow-hidden flex items-center justify-center border border-samauma-500 shadow-inner bg-white">
-                        <img src="Logo%20definida.jpeg" alt="Logo Balneário Samaúma" class="h-full w-full object-cover">
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold tracking-wider text-samauma-100 flex items-center gap-2">
-                            BALNEÁRIO SAMAÚMA
-                        </h1>
-                        <p class="text-xs text-samauma-300">Gestão Operacional & Financeira Integrada</p>
-                    </div>
-                </div>
-
-                <!-- Status Badge and Quick Info -->
-                <div class="flex items-center gap-3 text-xs md:text-sm">
-                    <span class="bg-samauma-900 border border-samauma-700 text-samauma-200 px-3 py-1 rounded-full flex items-center gap-2 font-medium">
-                        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
-                        Modo Online
-                    </span>
-                    <span id="header-date" class="text-samauma-300 hidden sm:inline"></span>
-                </div>
+    <!-- SIDEBAR (desktop/tablet) -->
+    <aside class="hidden md:flex fixed inset-y-0 left-0 w-64 bg-samauma-950 text-white flex-col z-30">
+        <div class="p-5 flex items-center gap-3 border-b border-samauma-800">
+            <div class="h-12 w-12 rounded-full overflow-hidden border border-samauma-500 bg-white flex-shrink-0">
+                <img src="Logo%20definida.jpeg" alt="Logo Balneário Samaúma" class="h-full w-full object-cover">
             </div>
-            
-            <!-- Tab Buttons Navigation -->
-            <nav class="flex overflow-x-auto border-t border-samauma-800 custom-scrollbar scroll-smooth">
-                <button id="btn-vendas" onclick="switchTab('vendas')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-cash-register text-lg"></i> Vendas / PDV
-                </button>
-                <button id="btn-estoque" onclick="switchTab('estoque')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-boxes-stacked text-lg"></i> Estoque
-                </button>
-                <button id="btn-financeiro" onclick="switchTab('financeiro')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-money-bill-transfer text-lg"></i> Financeiro
-                </button>
-                <button id="btn-dashboard" onclick="switchTab('dashboard')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-chart-line text-lg"></i> Dashboard
-                </button>
-                <button id="btn-config" onclick="switchTab('config')" class="tab-btn py-3 px-4 md:px-6 flex items-center gap-2 font-medium text-sm transition-all border-b-2 border-transparent text-samauma-200 hover:text-white hover:bg-samauma-900/50 whitespace-nowrap">
-                    <i class="fa-solid fa-sliders text-lg"></i> Configurações
-                </button>
-            </nav>
+            <div class="min-w-0">
+                <h1 class="text-sm font-extrabold tracking-wide text-samauma-100 leading-tight">BALNEÁRIO<br>SAMAÚMA</h1>
+            </div>
+        </div>
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar">
+            <button id="btn-vendas" data-tab="vendas" onclick="switchTab('vendas')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left">
+                <i class="fa-solid fa-cash-register w-5 text-center"></i> Vendas / PDV
+            </button>
+            <button id="btn-estoque" data-tab="estoque" onclick="switchTab('estoque')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left">
+                <i class="fa-solid fa-boxes-stacked w-5 text-center"></i> Estoque
+            </button>
+            <button id="btn-financeiro" data-tab="financeiro" onclick="switchTab('financeiro')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left">
+                <i class="fa-solid fa-money-bill-transfer w-5 text-center"></i> Financeiro
+            </button>
+            <button id="btn-dashboard" data-tab="dashboard" onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left">
+                <i class="fa-solid fa-chart-line w-5 text-center"></i> Dashboard
+            </button>
+            <button id="btn-config" data-tab="config" onclick="switchTab('config')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left">
+                <i class="fa-solid fa-sliders w-5 text-center"></i> Configurações
+            </button>
+        </nav>
+        <div class="p-4 border-t border-samauma-800 text-xs space-y-2">
+            <span class="bg-samauma-900 border border-samauma-700 text-samauma-200 px-3 py-1 rounded-full inline-flex items-center gap-2 font-medium">
+                <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Modo Online
+            </span>
+            <p id="header-date" class="text-samauma-300 first-letter:uppercase"></p>
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-samauma-800">
+                <div class="min-w-0">
+                    <p id="user-name" class="text-sm font-semibold text-white truncate"></p>
+                    <p id="user-role" class="text-[11px] text-samauma-300"></p>
+                </div>
+                <button onclick="AuthSystem.logout()" class="text-samauma-200 hover:text-white hover:bg-samauma-900 px-3 py-2 rounded-lg" title="Sair" aria-label="Sair"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- TOPBAR (celular) -->
+    <header class="md:hidden bg-samauma-950 text-white sticky top-0 z-30 px-4 py-2.5 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+            <div class="h-9 w-9 rounded-full overflow-hidden border border-samauma-500 bg-white">
+                <img src="Logo%20definida.jpeg" alt="Logo" class="h-full w-full object-cover">
+            </div>
+            <span class="text-sm font-extrabold tracking-wide text-samauma-100">SAMAÚMA</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <span id="user-name-m" class="text-[11px] text-samauma-200"></span>
+            <button onclick="AuthSystem.logout()" class="text-samauma-200 p-2" title="Sair" aria-label="Sair"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
     </header>
 
+    <!-- BOTTOM NAV (celular) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-samauma-950 border-t border-samauma-800 flex">
+        <button id="mbtn-vendas" data-tab="vendas" onclick="switchTab('vendas')" class="mnav-btn flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold">
+            <i class="fa-solid fa-cash-register text-lg"></i>PDV
+        </button>
+        <button id="mbtn-estoque" data-tab="estoque" onclick="switchTab('estoque')" class="mnav-btn flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold">
+            <i class="fa-solid fa-boxes-stacked text-lg"></i>Estoque
+        </button>
+        <button id="mbtn-financeiro" data-tab="financeiro" onclick="switchTab('financeiro')" class="mnav-btn flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold">
+            <i class="fa-solid fa-money-bill-transfer text-lg"></i>Financeiro
+        </button>
+        <button id="mbtn-dashboard" data-tab="dashboard" onclick="switchTab('dashboard')" class="mnav-btn flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold">
+            <i class="fa-solid fa-chart-line text-lg"></i>Dashboard
+        </button>
+        <button id="mbtn-config" data-tab="config" onclick="switchTab('config')" class="mnav-btn flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold">
+            <i class="fa-solid fa-sliders text-lg"></i>Ajustes
+        </button>
+    </nav>
+
     <!-- MAIN CONTAINER -->
-    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow">
+    <main class="max-w-7xl mx-auto px-4 md:px-8 py-6 w-full flex-grow">
         
         <!-- ==================== TABS CONTENT ==================== -->
 
         <!-- 1. TAB: DASHBOARD -->
         <section id="tab-dashboard" class="tab-content hidden space-y-6">
             <!-- Filter and Actions -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 card p-4">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i class="fa-solid fa-square-poll-vertical text-samauma-600"></i>
@@ -149,68 +214,43 @@
             </div>
 
             <!-- Balanço Financeiro Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Entradas Card -->
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-emerald-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300">
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Faturamento (Entradas)</p>
-                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-entradas">R$ 0,00</h3>
-                        <span class="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
-                            <i class="fa-solid fa-circle-arrow-up"></i> Vendas Concluídas
-                        </span>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                <div class="card p-5 flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Faturamento</p>
+                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1.5 truncate" id="dash-entradas">R$ 0,00</h3>
+                        <span class="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block"><i class="fa-solid fa-arrow-up"></i> Vendas concluídas</span>
                     </div>
-                    <div class="bg-emerald-50 text-emerald-600 p-3.5 rounded-xl">
-                        <i class="fa-solid fa-circle-dollar-to-slot text-2xl"></i>
-                    </div>
+                    <div class="kpi-icon bg-emerald-50 text-emerald-600"><i class="fa-solid fa-circle-dollar-to-slot"></i></div>
                 </div>
-
-                <!-- Saídas/Custos Card -->
-                <div class="bg-white rounded-xl shadow-sm border-l-4 border-red-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300">
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Saídas & Despesas</p>
-                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-saidas">R$ 0,00</h3>
-                        <span class="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
-                            <i class="fa-solid fa-circle-arrow-down"></i> Custos Pagos
-                        </span>
+                <div class="card p-5 flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Saídas e despesas</p>
+                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1.5 truncate" id="dash-saidas">R$ 0,00</h3>
+                        <span class="text-[11px] text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block"><i class="fa-solid fa-arrow-down"></i> Custos pagos</span>
                     </div>
-                    <div class="bg-amber-50 text-amber-600 p-3.5 rounded-xl">
-                        <i class="fa-solid fa-receipt text-2xl"></i>
-                    </div>
+                    <div class="kpi-icon bg-rose-50 text-rose-600"><i class="fa-solid fa-receipt"></i></div>
                 </div>
-
-                <!-- Saldo Líquido Card -->
-                <div class="bg-amber-50 rounded-xl shadow-sm border-l-4 border-amber-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300">
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Saldo em Caixa</p>
-                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-saldo">R$ 0,00</h3>
-                        <span class="text-[10px] text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
-                            <i class="fa-solid fa-scale-balanced"></i> Entradas - Saídas
-                        </span>
+                <div class="card p-5 flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Saldo em caixa</p>
+                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1.5 truncate" id="dash-saldo">R$ 0,00</h3>
+                        <span class="text-[11px] text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full font-medium mt-2 inline-block"><i class="fa-solid fa-scale-balanced"></i> Entradas − saídas</span>
                     </div>
-                    <div class="bg-cyan-50 text-cyan-600 p-3.5 rounded-xl">
-                        <i class="fa-solid fa-wallet text-2xl"></i>
-                    </div>
+                    <div class="kpi-icon bg-sky-50 text-sky-600"><i class="fa-solid fa-wallet"></i></div>
                 </div>
-
-                <!-- Lucro Estimado Card -->
-                <div class="bg-amber-50 text-amber-600 border-l-4 border-amber-500 p-4 flex justify-between items-center hover:shadow-md transition-all duration-300 group">
-                    <div>
-                        <div class="flex items-center gap-1.5">
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Lucro Operacional</p>
-                            <span class="text-slate-400 hover:text-slate-600 cursor-pointer text-xs" title="Faturamento total menos o custo dos produtos vendidos (CMV) e as despesas operacionais periódicas (exclui compras de reposição de estoque para evitar duplicidade).">
-                                <i class="fa-solid fa-circle-info"></i>
-                            </span>
-                        </div>
-                        <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-lucro">R$ 0,00</h3>
-                        <span id="dash-lucro-badge" class="text-[10px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block">
-                            Lucratividade: 0%
-                        </span>
+                <div class="card p-5 flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Lucro operacional</p>
+                        <h3 class="text-2xl font-extrabold text-slate-800 mt-1.5 truncate" id="dash-lucro">R$ 0,00</h3>
+                        <span id="dash-lucro-badge" class="text-[11px] text-samauma-800 bg-samauma-100 px-2 py-0.5 rounded-full font-medium mt-2 inline-block" title="Faturamento menos o custo dos produtos vendidos (CMV) e as despesas operacionais.">Lucratividade: 0%</span>
                     </div>
-                    <div class="bg-amber-100 text-amber-600 p-3.5 rounded-xl group-hover:bg-amber-200 transition-colors">
-                        <i class="fa-solid fa-hand-holding-dollar text-2xl"></i>
-                    </div>
+                    <div class="kpi-icon bg-amber-50 text-amber-600"><i class="fa-solid fa-hand-holding-dollar"></i></div>
                 </div>
             </div>
+
+            <!-- Avisos rápidos -->
+            <div id="dash-insights" class="hidden flex flex-col sm:flex-row gap-2"></div>
 
             <!-- Alertas de Estoque Baixo (Se houver) -->
             <div id="dashboard-stock-alerts" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
@@ -227,7 +267,7 @@
             <!-- Gráficos e Tabelas -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Gráfico de Fluxo de Caixa -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 lg:col-span-2">
+                <div class="card p-4 lg:col-span-2">
                     <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-chart-area text-samauma-500"></i> Fluxo de Caixa Recente (Últimos 10 Dias)
                     </h3>
@@ -237,7 +277,7 @@
                 </div>
 
                 <!-- Gráfico de Produtos Mais Vendidos -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                <div class="card p-4">
                     <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-ranking-star text-samauma-accent"></i> Itens Mais Vendidos
                     </h3>
@@ -250,7 +290,7 @@
             <!-- Resumos de Atividades e Resumos Extras -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Contas a Pagar / Pendentes Recentes -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                <div class="card p-4">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
                             <i class="fa-solid fa-clock text-rose-500"></i> Contas a Pagar Pendentes
@@ -275,7 +315,7 @@
                 </div>
 
                 <!-- Vendas Recentes -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                <div class="card p-4">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
                             <i class="fa-solid fa-clock-rotate-left text-emerald-500"></i> Últimas Vendas Fechadas
@@ -306,7 +346,7 @@
             <!-- 2.1 VIEW: COMANDAS GRID -->
             <div id="vendas-grid-view" class="space-y-6">
                 <!-- Bar de Ações -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 card p-4">
                     <div>
                         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                             <i class="fa-solid fa-utensils text-samauma-600"></i>
@@ -344,7 +384,7 @@
             <!-- 2.2 VIEW: POS CAIXA (ACTIVE ORDER SCREEN) -->
             <div id="vendas-pos-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <!-- Detalhes do Pedido & Carrinho (Left Panel) -->
-                <div class="lg:col-span-5 bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col min-h-[500px]">
+                <div class="order-2 lg:order-1 lg:col-span-5 card p-4 flex flex-col min-h-[500px] lg:sticky lg:top-6 lg:self-start">
                     <!-- Top Order Metadata -->
                     <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
                         <div>
@@ -392,9 +432,9 @@
                 </div>
 
                 <!-- Menu de Produtos (Right Panel) -->
-                <div class="lg:col-span-7 space-y-4 flex flex-col">
+                <div class="order-1 lg:order-2 lg:col-span-7 space-y-4 flex flex-col">
                     <!-- Search and Categories -->
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-3">
+                    <div class="card p-4 space-y-3">
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -409,7 +449,7 @@
                     </div>
 
                     <!-- Products List -->
-                    <div class="flex flex-col gap-2 overflow-y-auto max-h-[480px] custom-scrollbar" id="pos-menu-products">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 overflow-y-auto max-h-[560px] custom-scrollbar pr-1" id="pos-menu-products">
                         <!-- Renderizado dinamicamente -->
                     </div>
                 </div>
@@ -419,7 +459,7 @@
         <!-- 3. TAB: ESTOQUE -->
         <section id="tab-estoque" class="tab-content hidden space-y-6">
             <!-- Estoque Control Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 card p-4">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i class="fa-solid fa-boxes-stacked text-samauma-600"></i>
@@ -427,7 +467,7 @@
                     </h2>
                     <p class="text-xs text-slate-500">Gerenciamento de materiais, compras e desperdícios</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <div class="somente-gestao flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <button onclick="openModal('modal-novo-produto')" class="bg-samauma-700 hover:bg-samauma-800 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 transition-colors shadow-sm">
                         <i class="fa-solid fa-plus"></i> Novo Produto
                     </button>
@@ -441,7 +481,7 @@
             </div>
 
             <!-- Tabela e Filtros de Produtos -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
+            <div class="card p-4 space-y-4">
                 <div class="flex flex-col sm:flex-row gap-2 justify-between items-center">
                     <!-- Buscas e Filtro de Categorias -->
                     <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-grow max-w-xl">
@@ -481,7 +521,7 @@
                                 <th class="py-3 px-4 text-center">Qtd Atual</th>
                                 <th class="py-3 px-4 text-center">Qtd Mínima</th>
                                 <th class="py-3 px-4 text-center">Status</th>
-                                <th class="py-3 px-4 text-center">Ações</th>
+                                <th class="somente-gestao py-3 px-4 text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="estoque-table-body" class="divide-y divide-slate-100">
@@ -501,7 +541,7 @@
         <!-- 4. TAB: FINANCEIRO / CUSTOS -->
         <section id="tab-financeiro" class="tab-content hidden space-y-6">
             <!-- Finance Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 card p-4">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i class="fa-solid fa-money-bill-transfer text-samauma-600"></i>
@@ -535,7 +575,7 @@
 
                 <!-- 4.1 SUBTAB: CONTAS A PAGAR -->
                 <div id="finance-contas-view" class="space-y-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
+                    <div class="card p-4 space-y-4">
                         <div class="flex flex-col sm:flex-row gap-2 justify-between items-center">
                             <!-- Filters -->
                             <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-grow max-w-xl">
@@ -583,7 +623,7 @@
 
                 <!-- 4.2 SUBTAB: EXTRATO DE CAIXA -->
                 <div id="finance-extrato-view" class="hidden space-y-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
+                    <div class="card p-4 space-y-4">
                         <div class="flex flex-col sm:flex-row gap-2 justify-between items-center">
                             <!-- Extrato Filters -->
                             <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-grow max-w-xl">
@@ -1642,8 +1682,8 @@
                 
                 document.getElementById('header-date').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 
-                // Abre o dashboard como página padrão
-                switchTab('dashboard');
+                // Mostra o login (ou entra direto se já houver sessão)
+                AuthSystem.start();
             }
 
             // --- OPERAÇÕES PRODUTO ---
@@ -1728,21 +1768,17 @@
         let chartTopProductsInstance = null;
 
         function switchTab(tabId) {
+            if (!AuthSystem.can(tabId)) return;
             // Esconde todas as abas
             document.querySelectorAll('.tab-content').forEach(section => section.classList.add('hidden'));
             // Mostra a selecionada
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
 
-            // Ajusta o design do botão ativo
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('border-samauma-accent', 'text-white', 'bg-samauma-900/60');
-                btn.classList.add('text-samauma-200');
+            // Ajusta o design do botão ativo (menu lateral e barra inferior)
+            document.querySelectorAll('[data-tab]').forEach(btn => {
+                btn.classList.toggle('nav-active', btn.dataset.tab === tabId);
             });
-            const activeBtn = document.getElementById(`btn-${tabId}`);
-            if (activeBtn) {
-                activeBtn.classList.add('border-samauma-accent', 'text-white', 'bg-samauma-900/60');
-                activeBtn.classList.remove('text-samauma-200');
-            }
+            window.scrollTo({ top: 0 });
 
             // Chama o renderizador correspondente
             if (tabId === 'dashboard') renderDashboard();
@@ -1810,11 +1846,27 @@
             // Alerta de estoque crítico desativado por enquanto (estoque/mínimo ainda não é cadastrado nos produtos)
             document.getElementById('dashboard-stock-alerts').classList.add('hidden');
 
+            renderDashboardInsights();
+
             // Preenche tabelas de resumos no dashboard
             renderDashboardTables(stats);
 
             // Renderiza os Gráficos
             renderDashboardCharts(stats);
+        }
+
+        function renderDashboardInsights() {
+            const box = document.getElementById('dash-insights');
+            const expenses = SamaumaStore.get('expenses', []);
+            const products = SamaumaStore.get('products', []);
+            const limit = new Date(); limit.setDate(limit.getDate() + 7);
+            const dueSoon = expenses.filter(e => e.status === 'pendente' && new Date(e.dueDate) <= limit).length;
+            const noCost = products.filter(p => p.sellPrice > 0 && !Number(p.costPrice)).length;
+            const chips = [];
+            if (dueSoon > 0) chips.push(`<button onclick="switchTab('financeiro')" class="flex-1 text-left bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-2.5 text-xs font-medium"><i class="fa-solid fa-clock mr-1.5"></i>${dueSoon} ${dueSoon === 1 ? 'conta vence' : 'contas vencem'} nos próximos 7 dias</button>`);
+            if (noCost > 0) chips.push(`<button onclick="switchTab('estoque')" class="flex-1 text-left bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-2.5 text-xs font-medium"><i class="fa-solid fa-tag mr-1.5"></i>${noCost} produtos sem preço de custo (o lucro fica impreciso)</button>`);
+            box.innerHTML = chips.join('');
+            box.classList.toggle('hidden', chips.length === 0);
         }
 
         function renderDashboardTables(stats) {
@@ -1988,17 +2040,17 @@
                 grid.innerHTML = openSales.map(sale => {
                     const totalQty = sale.items.reduce((sum, i) => sum + i.quantity, 0);
                     return `
-                        <div onclick="SamaumaController.loadPOS('${sale.id}')" class="bg-white rounded-xl shadow-sm hover:shadow-md border border-slate-100 hover:border-samauma-300 p-4 flex flex-col justify-between cursor-pointer transition-all duration-200">
+                        <div onclick="SamaumaController.loadPOS('${sale.id}')" class="menu-card bg-white rounded-2xl border border-slate-200 p-4 flex flex-col justify-between cursor-pointer min-h-[132px]">
                             <div>
                                 <span class="bg-samauma-100 text-samauma-800 text-[10px] font-bold px-2 py-0.5 rounded-full">${sale.customerType}</span>
-                                <h4 class="text-base font-extrabold text-slate-800 mt-2">${sale.customerName}</h4>
+                                <h4 class="text-lg font-extrabold text-slate-800 mt-2 leading-tight">${sale.customerName}</h4>
                                 <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
                                     <i class="fa-solid fa-list-check"></i> ${totalQty} ${totalQty === 1 ? 'item' : 'itens'}
                                 </p>
                             </div>
                             <div class="mt-4 pt-3 border-t border-slate-50 flex justify-between items-center">
                                 <span class="text-[10px] text-slate-400">${formatTime(sale.date)}</span>
-                                <span class="text-sm font-black text-samauma-775">${formatCurrency(sale.totalAmount)}</span>
+                                <span class="text-base font-extrabold text-samauma-700">${formatCurrency(sale.totalAmount)}</span>
                             </div>
                         </div>
                     `;
@@ -2087,8 +2139,8 @@
             const categoriesContainer = document.getElementById('pos-menu-categories');
             categoriesContainer.innerHTML = categories.map(cat => {
                 const catValue = cat === 'Todos' ? '' : cat;
-                const activeClass = currentMenuCategoryFilter === catValue ? 'bg-samauma-700 text-white border-samauma-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200';
-                return `<button onclick="filterPOSMenuByCategory('${catValue}')" class="px-3 py-1 text-xs font-bold rounded-lg border transition-all whitespace-nowrap ${activeClass}">${cat}</button>`;
+                const activeClass = currentMenuCategoryFilter === catValue ? 'bg-samauma-950 text-white border-samauma-950' : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200';
+                return `<button onclick="filterPOSMenuByCategory('${catValue}')" class="px-4 py-2 text-xs font-semibold rounded-full border transition-all whitespace-nowrap ${activeClass}">${cat}</button>`;
             }).join('');
 
             // Agrupa produtos com variações de tamanho num único item de menu
@@ -2127,7 +2179,7 @@
                     const sizeButtons = availableSizes.map(size => {
                         const isActive = size === selectedSize;
                         const activeClass = isActive ? 'bg-samauma-700 text-white border-samauma-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
-                        return `<button onclick="selectMenuVariant('${item.baseName.replace(/'/g, "\\'")}', '${size}')" class="px-2 py-1 text-[10px] font-bold rounded-md border transition-all ${activeClass}">${size}</button>`;
+                        return `<button onclick="selectMenuVariant('${item.baseName.replace(/'/g, "\\'")}', '${size}')" class="px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${activeClass}">${size}</button>`;
                     }).join('');
 
                     return renderMenuRow(prod, item.baseName, item.category, sizeButtons);
@@ -2145,20 +2197,16 @@
         // Obs: por enquanto o controle de estoque/mínimo não bloqueia nem sinaliza a venda (será cadastrado depois).
         function renderMenuRow(prod, displayName, category, sizeButtonsHtml) {
             return `
-                <div class="bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between gap-3 shadow-sm hover:border-samauma-300 transition-colors">
+                <div class="menu-card bg-white p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
                     <div class="min-w-0 flex-grow">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[8px] bg-slate-100 text-slate-500 uppercase px-1.5 py-0.5 rounded font-semibold">${category}</span>
-                        </div>
-                        <h4 class="text-xs font-bold text-slate-800 mt-1 truncate">${displayName}</h4>
-                        ${sizeButtonsHtml ? `<div class="flex gap-1.5 mt-1.5">${sizeButtonsHtml}</div>` : ''}
+                        <span class="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">${category}</span>
+                        <h4 class="text-sm font-bold text-slate-800 leading-snug">${displayName}</h4>
+                        ${sizeButtonsHtml ? `<div class="flex gap-1.5 mt-2">${sizeButtonsHtml}</div>` : ''}
+                        <span class="text-base font-extrabold text-samauma-700 mt-1.5 inline-block">${formatCurrency(prod.sellPrice)}</span>
                     </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-sm font-black text-samauma-800">${formatCurrency(prod.sellPrice)}</span>
-                        <button onclick="addProductToCart('${prod.id}')" class="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-lg text-xs transition-colors flex items-center justify-center">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
+                    <button onclick="addProductToCart('${prod.id}')" aria-label="Adicionar ${displayName}" class="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white h-11 w-11 rounded-full text-sm transition-colors flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
                 </div>
             `;
         }
@@ -2298,7 +2346,7 @@
                             <td class="py-3 px-4 text-center font-bold text-slate-850">${p.stock}</td>
                             <td class="py-3 px-4 text-center text-slate-400 font-medium">${p.minStock}</td>
                             <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 text-[10px] font-black rounded-full ${badgeClass}">${badgeText}</span></td>
-                            <td class="py-3 px-4 text-center">
+                            <td class="somente-gestao py-3 px-4 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
                                     <button onclick="openModalEditProduct('${p.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition-colors" title="Editar Produto">
                                         <i class="fa-solid fa-pen text-xs"></i>
@@ -2932,6 +2980,141 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Falha ao registrar service worker:', err));
     });
 }
+
+// --- LOGIN E PERFIS ---
+// Atenção: esta é uma proteção provisória, guardada só neste aparelho (a senha é criada no 1º acesso).
+// A segurança real virá com o servidor (Supabase).
+const AuthSystem = {
+    users: [
+        { id: 'willyan', name: 'Willyan', role: 'admin' },
+        { id: 'baral', name: 'Baral', role: 'gestor', inicial: true },
+        { id: 'mae', name: 'Mãe', role: 'vendas', inicial: true },
+        { id: 'rihanna', name: 'Rihanna', role: 'vendas', inicial: true }
+    ],
+    // Senha inicial provisória (usuários com inicial: true entram com ela; o Willyan define a própria no 1º acesso)
+    SENHA_INICIAL: '123456',
+    roleLabels: { admin: 'Administrador', gestor: 'Gestor', vendas: 'Vendas e estoque' },
+    // Willyan vê tudo; Baral vê tudo menos Configurações; Mãe e Rihanna só Vendas e Estoque (estoque só para consulta)
+    access: {
+        admin: ['vendas', 'estoque', 'financeiro', 'dashboard', 'config'],
+        gestor: ['vendas', 'estoque', 'financeiro', 'dashboard'],
+        vendas: ['vendas', 'estoque']
+    },
+    current: null,
+    selected: null,
+
+    can(tab) {
+        return !!this.current && this.access[this.current.role].includes(tab);
+    },
+    hashes() {
+        try { return JSON.parse(localStorage.getItem('samauma_auth') || '{}'); } catch (e) { return {}; }
+    },
+    async digest(id, pass) {
+        const text = 'samauma:' + id + ':' + pass;
+        if (window.crypto && crypto.subtle) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        let h = 5381;
+        for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+        return 'x' + h;
+    },
+    savedSession() {
+        try { return localStorage.getItem('samauma_session') || sessionStorage.getItem('samauma_session'); } catch (e) { return null; }
+    },
+    start() {
+        const user = this.users.find(u => u.id === this.savedSession());
+        if (user) this.enter(user); else this.showLogin();
+    },
+    showLogin() {
+        this.current = null;
+        this.selected = null;
+        delete document.body.dataset.role;
+        document.getElementById('app-content').style.display = 'none';
+        document.getElementById('login-screen').style.display = '';
+        document.getElementById('login-pass-wrap').classList.add('hidden');
+        document.getElementById('login-error').classList.add('hidden');
+        document.getElementById('login-pass').value = '';
+        document.getElementById('login-pass2').value = '';
+        this.renderUsers();
+    },
+    renderUsers() {
+        document.getElementById('login-users').innerHTML = this.users.map(u => {
+            const active = u.id === this.selected;
+            return `<button type="button" onclick="AuthSystem.selectUser('${u.id}')" class="flex items-center gap-3 px-3 py-3 rounded-xl border text-left transition-all ${active ? 'bg-samauma-950 border-samauma-950 text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-samauma-400'}">
+                <span class="h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm ${active ? 'bg-samauma-accent text-samauma-950' : 'bg-samauma-100 text-samauma-800'}">${u.name.charAt(0)}</span>
+                <span><span class="block text-sm font-bold">${u.name}</span><span class="block text-[11px] ${active ? 'text-samauma-300' : 'text-slate-400'}">${this.roleLabels[u.role]}</span></span>
+            </button>`;
+        }).join('');
+    },
+    selectUser(id) {
+        this.selected = id;
+        const usuario = this.users.find(u => u.id === id);
+        const first = !this.hashes()[id] && !usuario.inicial;
+        document.getElementById('login-pass-wrap').classList.remove('hidden');
+        document.getElementById('login-pass2').classList.toggle('hidden', !first);
+        document.getElementById('login-pass').autocomplete = first ? 'new-password' : 'current-password';
+        document.getElementById('login-hint').innerText = first
+            ? 'Primeiro acesso neste aparelho: crie sua senha (mínimo de 6 caracteres).'
+            : 'Digite sua senha.';
+        document.getElementById('login-error').classList.add('hidden');
+        document.getElementById('login-pass').value = '';
+        document.getElementById('login-pass2').value = '';
+        this.renderUsers();
+        document.getElementById('login-pass').focus();
+    },
+    fail(msg) {
+        const el = document.getElementById('login-error');
+        el.innerText = msg;
+        el.classList.remove('hidden');
+    },
+    async submit(e) {
+        e.preventDefault();
+        document.getElementById('login-error').classList.add('hidden');
+        const user = this.users.find(u => u.id === this.selected);
+        if (!user) return this.fail('Escolha o seu nome.');
+        const pass = document.getElementById('login-pass').value;
+        const stored = this.hashes()[user.id];
+        if (!stored && user.inicial) {
+            if (pass !== this.SENHA_INICIAL) return this.fail('Senha incorreta.');
+        } else if (!stored) {
+            if (pass.length < 6) return this.fail('A senha precisa ter pelo menos 6 caracteres.');
+            if (pass !== document.getElementById('login-pass2').value) return this.fail('As senhas não são iguais.');
+            const all = this.hashes();
+            all[user.id] = await this.digest(user.id, pass);
+            localStorage.setItem('samauma_auth', JSON.stringify(all));
+        } else if (stored !== await this.digest(user.id, pass)) {
+            return this.fail('Senha incorreta.');
+        }
+        const remember = document.getElementById('login-remember').checked;
+        try {
+            localStorage.removeItem('samauma_session');
+            sessionStorage.removeItem('samauma_session');
+            (remember ? localStorage : sessionStorage).setItem('samauma_session', user.id);
+        } catch (err) { /* sem armazenamento: a sessão vale só até recarregar */ }
+        this.enter(user);
+    },
+    enter(user) {
+        this.current = user;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-content').style.display = '';
+        document.getElementById('user-name').innerText = user.name;
+        document.getElementById('user-role').innerText = this.roleLabels[user.role];
+        document.getElementById('user-name-m').innerText = user.name;
+        document.querySelectorAll('[data-tab]').forEach(btn => {
+            btn.style.display = this.can(btn.dataset.tab) ? '' : 'none';
+        });
+        document.body.dataset.role = user.role;
+        switchTab(user.role === 'vendas' ? 'vendas' : 'dashboard');
+    },
+    logout() {
+        try {
+            localStorage.removeItem('samauma_session');
+            sessionStorage.removeItem('samauma_session');
+        } catch (err) { /* ignora */ }
+        this.showLogin();
+    }
+};
 
 // Run on load
 SamaumaController.init();
