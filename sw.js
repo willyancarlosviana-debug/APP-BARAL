@@ -1,4 +1,4 @@
-const CACHE_NAME = 'samauma-app-v2';
+const CACHE_NAME = 'samauma-app-v3';
 const APP_SHELL = ['./index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {

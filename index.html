@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Sumaúma">
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -51,7 +51,7 @@
     <!-- Supabase (login e banco de dados) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
     <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1/dist/chart.umd.min.js"></script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -1265,6 +1265,8 @@
             static fila = Promise.resolve(); // envia as alterações uma de cada vez, em ordem
             static canal = null;
             static avisouErro = false;
+            static CHAVE_PENDENTES = 'samauma_pendentes'; // alterações ainda não enviadas (sobrevivem a fechar o app)
+            static timerReenvio = null;
 
             static get(key, defaultValue = []) {
                 const data = localStorage.getItem(`samauma_${key}`);
@@ -1277,7 +1279,14 @@
                 if (this.remoto && this.TABELAS[key] && Array.isArray(value)) this.enviar(key, antes, value);
             }
 
-            // Compara a lista antiga com a nova e manda só o que mudou para o banco
+            static pendentes() {
+                try { return JSON.parse(localStorage.getItem(this.CHAVE_PENDENTES) || '[]'); } catch (e) { return []; }
+            }
+            static salvarPendentes(lista) {
+                localStorage.setItem(this.CHAVE_PENDENTES, JSON.stringify(lista));
+            }
+
+            // Compara a lista antiga com a nova e guarda só o que mudou para enviar ao banco
             static enviar(key, antes, depois) {
                 const tabela = this.TABELAS[key];
                 const jsonAntes = new Map(antes.map(i => [i.id, JSON.stringify(i)]));
@@ -1290,32 +1299,70 @@
                 });
                 const removidos = antes.filter(i => !idsDepois.has(i.id)).map(i => i.id);
                 if (!novos.length && !alterados.length && !removidos.length) return;
-
-                this.fila = this.fila.then(async () => {
-                    try {
-                        for (let i = 0; i < novos.length; i += 200) {
-                            const { error } = await this.remoto.from(tabela).insert(novos.slice(i, i + 200));
-                            if (error && error.code !== '23505') throw error;
-                        }
-                        for (const a of alterados) {
-                            const { error } = await this.remoto.from(tabela).update({ data: a.data }).eq('id', a.id);
-                            if (error) throw error;
-                        }
-                        if (removidos.length) {
-                            const { error } = await this.remoto.from(tabela).delete().in('id', removidos);
-                            if (error) throw error;
-                        }
-                    } catch (e) {
-                        console.warn('Falha ao sincronizar', tabela, e);
-                        this.avisarFalha();
-                    }
-                });
+                this.agendar({ tipo: 'lista', tabela, novos, alterados, removidos });
             }
 
-            static avisarFalha() {
+            // Põe a operação na fila (guardada no aparelho) e tenta enviar
+            static agendar(op) {
+                this.salvarPendentes(this.pendentes().concat(op));
+                this.esvaziar();
+            }
+
+            // Executa uma operação no banco; devolve 'ok', 'tentar' (sem rede/servidor fora) ou 'recusada'
+            static async executar(op) {
+                const checar = r => {
+                    if (!r.error) return;
+                    if (op.tipo === 'lista' && r.error.code === '23505') return; // já existia
+                    const st = r.status || 0;
+                    const e = new Error(r.error.message || 'erro');
+                    e.temporario = (st === 0 || st >= 500 || st === 408 || st === 429);
+                    throw e;
+                };
+                try {
+                    if (op.tipo === 'estoque') {
+                        checar(await this.remoto.rpc('ajustar_estoque', { p_id: op.id, p_delta: op.delta }));
+                    } else {
+                        for (let i = 0; i < op.novos.length; i += 200) checar(await this.remoto.from(op.tabela).insert(op.novos.slice(i, i + 200)));
+                        for (const a of op.alterados) checar(await this.remoto.from(op.tabela).update({ data: a.data }).eq('id', a.id));
+                        if (op.removidos.length) checar(await this.remoto.from(op.tabela).delete().in('id', op.removidos));
+                    }
+                    return 'ok';
+                } catch (e) {
+                    console.warn('Falha ao sincronizar', op.tabela || op.tipo, e);
+                    return (e.temporario !== false) ? 'tentar' : 'recusada';
+                }
+            }
+
+            // Envia a fila na ordem. Se a internet cair, para e tenta de novo sozinho depois.
+            static esvaziar() {
+                this.fila = this.fila.then(async () => {
+                    if (!this.remoto) return;
+                    let falhou = false;
+                    for (;;) {
+                        const lista = this.pendentes();
+                        if (!lista.length) break;
+                        const r = await this.executar(lista[0]);
+                        if (r === 'tentar') { falhou = true; break; }
+                        this.salvarPendentes(this.pendentes().slice(1)); // enviada, ou recusada pelo servidor (não adianta repetir)
+                        if (r === 'recusada') this.avisarFalha('O servidor recusou uma alteração (sem permissão). Ela não foi salva.');
+                    }
+                    if (falhou) {
+                        this.avisarFalha('Sem conexão. Suas alterações estão guardadas e serão enviadas quando a internet voltar.');
+                        this.agendarReenvio();
+                    }
+                });
+                return this.fila;
+            }
+
+            static agendarReenvio() {
+                if (this.timerReenvio) return;
+                this.timerReenvio = setTimeout(() => { this.timerReenvio = null; if (this.pendentes().length) this.esvaziar(); }, 20000);
+            }
+
+            static avisarFalha(msg) {
                 if (this.avisouErro) return;
                 this.avisouErro = true;
-                showToast('Não foi possível salvar no servidor. Verifique a internet e tente de novo.', 'error');
+                showToast(msg || 'Não foi possível salvar no servidor. Verifique a internet e tente de novo.', 'error');
                 setTimeout(() => { this.avisouErro = false; }, 15000);
             }
 
@@ -1327,17 +1374,7 @@
                 if (!prod || !delta) return;
                 prod.stock = parseFloat(((Number(prod.stock) || 0) + delta).toFixed(2));
                 localStorage.setItem('samauma_products', JSON.stringify(produtos));
-                if (this.remoto) {
-                    this.fila = this.fila.then(async () => {
-                        try {
-                            const { error } = await this.remoto.rpc('ajustar_estoque', { p_id: id, p_delta: delta });
-                            if (error) throw error;
-                        } catch (e) {
-                            console.warn('Falha ao ajustar estoque', e);
-                            this.avisarFalha();
-                        }
-                    });
-                }
+                if (this.remoto) this.agendar({ tipo: 'estoque', id, delta });
             }
 
             // Baixa tudo do banco para o navegador (ao entrar)
@@ -3484,6 +3521,7 @@ const AuthSystem = {
     async enter(user) {
         // Baixa os dados do servidor e passa a ouvir as mudanças dos outros aparelhos
         SamaumaStore.remoto = sb;
+        await SamaumaStore.esvaziar();
         SamaumaStore.limparLocal();
         await SamaumaStore.puxarTudo();
         // Primeiro acesso de um gestor: cadastra o cardápio padrão no banco
@@ -3512,6 +3550,9 @@ const AuthSystem = {
         this.showLogin();
     }
 };
+
+// Quando a internet volta, envia o que ficou guardado
+window.addEventListener('online', () => { if (SamaumaStore.remoto && SamaumaStore.pendentes().length) SamaumaStore.esvaziar(); });
 
 // Run on load
 SamaumaController.init();
