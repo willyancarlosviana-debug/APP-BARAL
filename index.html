@@ -1689,6 +1689,7 @@
                     discount: 0,
                     paymentMethod: "",
                     estoqueBaixado: true, // regra nova: o estoque baixa quando o item é lançado na comanda
+                    abertoPor: (AuthSystem.current && AuthSystem.current.name) || '', // quem atendeu
                     status: "open"
                 };
                 sales.push(newOrder);
@@ -1778,6 +1779,7 @@
 
                 // 2. Atualizar dados da venda
                 sale.status = "closed";
+                sale.fechadoPor = (AuthSystem.current && AuthSystem.current.name) || ''; // quem recebeu o pagamento
                 sale.paymentMethod = paymentMethod;
                 sale.discount = parseFloat(discount) || 0;
                 sale.totalAmount = parseFloat((sale.totalAmount - sale.discount).toFixed(2));
@@ -2814,8 +2816,11 @@
 
             const fechadas = vendas.filter(v => v.status === 'closed' && doDia(v.date)).sort((a, b) => new Date(a.date) - new Date(b.date));
             const abertas = vendas.filter(v => v.status === 'open');
-            const porPagamento = {}, porItem = {}, porCategoria = {};
+            const porPagamento = {}, porItem = {}, porCategoria = {}, porPessoa = {};
             fechadas.forEach(v => {
+                const pessoa = v.abertoPor || v.fechadoPor || 'Não registrado';
+                const pp = porPessoa[pessoa] = porPessoa[pessoa] || { qtd: 0, valor: 0 };
+                pp.qtd += 1; pp.valor += v.totalAmount;
                 const forma = v.paymentMethod || 'Não informado';
                 porPagamento[forma] = porPagamento[forma] || { qtd: 0, valor: 0 };
                 porPagamento[forma].qtd += 1;
@@ -2833,7 +2838,7 @@
             const total = fechadas.reduce((t, v) => t + v.totalAmount, 0);
             const descontos = fechadas.reduce((t, v) => t + (v.discount || 0), 0);
             const saidas = transacoes.filter(t => t.type !== 'entrada' && doDia(t.date)).reduce((t, x) => t + x.amount, 0);
-            return { dia, fechadas, abertas, porPagamento, porItem, porCategoria, total, descontos, saidas,
+            return { dia, fechadas, abertas, porPagamento, porItem, porCategoria, porPessoa, total, descontos, saidas,
                      ticket: fechadas.length ? total / fechadas.length : 0 };
         }
 
@@ -2841,7 +2846,7 @@
             const r = dadosRelatorioDia();
             const linhasOrdenadas = obj => Object.entries(obj).sort((a, b) => b[1].valor - a[1].valor);
             const tabela = (cab, linhas) => linhas.length
-                ? `<table><thead><tr>${cab.map(c => `<th class="${['Valor', 'Itens', 'Quantidade', 'Vendas'].includes(c) ? 'num' : ''}">${c}</th>`).join('')}</tr></thead><tbody>${linhas.join('')}</tbody></table>`
+                ? `<table><thead><tr>${cab.map(c => `<th class="${['Valor', 'Itens', 'Quantidade', 'Vendas', 'Ticket médio'].includes(c) ? 'num' : ''}">${c}</th>`).join('')}</tr></thead><tbody>${linhas.join('')}</tbody></table>`
                 : '<p style="font-size:12px;color:#6b7280">Nenhuma venda neste dia.</p>';
             const resumo = (rotulo, valor) => `<div><small>${rotulo}</small><b>${valor}</b></div>`;
             const quem = (AuthSystem.current && AuthSystem.current.name) || '';
@@ -2859,6 +2864,9 @@
                 </div>
                 ${r.abertas.length ? `<div class="rel-aviso">Atenção: ${r.abertas.length} comanda(s) ainda aberta(s), no valor de ${formatCurrency(r.abertas.reduce((t, v) => t + v.totalAmount, 0))}. Elas só entram no relatório depois de fechadas.</div>` : ''}
 
+                <h3>Por atendente</h3>
+                ${tabela(['Atendente', 'Vendas', 'Valor', 'Ticket médio'], linhasOrdenadas(r.porPessoa).map(([nome, d]) => `<tr><td>${esc(nome)}</td><td class="num">${d.qtd}</td><td class="num">${formatCurrency(d.valor)}</td><td class="num">${formatCurrency(d.valor / d.qtd)}</td></tr>`))}
+
                 <h3>Por forma de pagamento</h3>
                 ${tabela(['Forma', 'Vendas', 'Valor'], linhasOrdenadas(r.porPagamento).map(([nome, d]) => `<tr><td>${esc(nome)}</td><td class="num">${d.qtd}</td><td class="num">${formatCurrency(d.valor)}</td></tr>`))}
 
@@ -2869,7 +2877,7 @@
                 ${tabela(['Item', 'Quantidade', 'Valor'], Object.entries(r.porItem).sort((a, b) => b[1].qtd - a[1].qtd).map(([nome, d]) => `<tr><td>${esc(nome)}</td><td class="num">${d.qtd}</td><td class="num">${formatCurrency(d.valor)}</td></tr>`))}
 
                 <h3>Vendas do dia</h3>
-                ${tabela(['Hora', 'Cliente / comanda', 'Pagamento', 'Itens', 'Valor'], r.fechadas.map(v => `<tr><td>${formatTime(v.date)}</td><td>${esc(v.customerName)}</td><td>${esc(v.paymentMethod || '-')}</td><td class="num">${v.items.reduce((t, i) => t + i.quantity, 0)}</td><td class="num">${formatCurrency(v.totalAmount)}</td></tr>`))}
+                ${tabela(['Hora', 'Cliente / comanda', 'Atendente', 'Fechou', 'Pagamento', 'Itens', 'Valor'], r.fechadas.map(v => `<tr><td>${formatTime(v.date)}</td><td>${esc(v.customerName)}</td><td>${esc(v.abertoPor || '-')}</td><td>${esc(v.fechadoPor || '-')}</td><td>${esc(v.paymentMethod || '-')}</td><td class="num">${v.items.reduce((t, i) => t + i.quantity, 0)}</td><td class="num">${formatCurrency(v.totalAmount)}</td></tr>`))}
             `;
             document.getElementById('relatorio-dia-corpo').innerHTML = html;
         }
@@ -2883,13 +2891,13 @@
             const r = dadosRelatorioDia();
             const num = v => String(v).replace('.', ',');
             let csv = 'data:text/csv;charset=utf-8,\uFEFF';
-            csv += 'Data;Hora;Cliente/Comanda;Pagamento;Item;Quantidade;Valor unitario;Subtotal;Desconto da venda\n';
+            csv += 'Data;Hora;Cliente/Comanda;Atendente;Fechou;Pagamento;Item;Quantidade;Valor unitario;Subtotal;Desconto da venda\n';
             r.fechadas.forEach(v => {
                 v.items.forEach((i, idx) => {
-                    csv += `"${formatDateBR(r.dia)}";"${formatTime(v.date)}";"${String(v.customerName).replace(/"/g, '""')}";"${v.paymentMethod || ''}";"${String(i.name).replace(/"/g, '""')}";${i.quantity};${num(i.sellPrice)};${num((i.sellPrice * i.quantity).toFixed(2))};${idx === 0 ? num(v.discount || 0) : 0}\n`;
+                    csv += `"${formatDateBR(r.dia)}";"${formatTime(v.date)}";"${String(v.customerName).replace(/"/g, '""')}";"${v.abertoPor || ''}";"${v.fechadoPor || ''}";"${v.paymentMethod || ''}";"${String(i.name).replace(/"/g, '""')}";${i.quantity};${num(i.sellPrice)};${num((i.sellPrice * i.quantity).toFixed(2))};${idx === 0 ? num(v.discount || 0) : 0}\n`;
                 });
             });
-            csv += `\n"TOTAL VENDIDO";;;;;;;${num(r.total.toFixed(2))};\n`;
+            csv += `\n"TOTAL VENDIDO";;;;;;;;;${num(r.total.toFixed(2))};\n`;
             const a = document.createElement('a');
             a.setAttribute('href', encodeURI(csv));
             a.setAttribute('download', `fechamento_${r.dia}.csv`);
