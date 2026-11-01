@@ -1,4 +1,4 @@
-const CACHE_NAME = 'samauma-app-v1';
+const CACHE_NAME = 'samauma-app-v2';
 const APP_SHELL = ['./index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -18,10 +18,13 @@ self.addEventListener('activate', (event) => {
 });
 
 // Network-first: sempre tenta buscar a versão mais nova; usa o cache só se estiver offline.
+// Só cuida dos arquivos do próprio app: as chamadas ao Supabase (dados e login) nunca passam por aqui,
+// para que dados reais não fiquem guardados no cache do aparelho.
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
+    if (new URL(event.request.url).origin !== self.location.origin) return;
     event.respondWith(
-        fetch(event.request)
+        fetch(event.request, { cache: 'no-cache' }) // revalida com o servidor, sem usar cópia velha do navegador
             .then((response) => {
                 const clone = response.clone();
                 caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
