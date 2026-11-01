@@ -123,6 +123,25 @@
         html.dark #login-users .bg-samauma-950 { background: #163226; border-color: #2ee59d; }
         html.dark #pos-menu-categories .bg-samauma-950 { background: #2ee59d; color: #04241a; border-color: #2ee59d; }
         html.dark .menu-card:hover { border-color: #2ee59d; box-shadow: 0 4px 14px rgba(46,229,157,.12); }
+        /* Relatório do dia: folha branca em qualquer tema, pronta para imprimir */
+        #relatorio-dia-corpo { background: #fff; color: #111827; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; }
+        #relatorio-dia-corpo h2 { font-size: 20px; font-weight: 800; margin: 0; }
+        #relatorio-dia-corpo h3 { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; margin: 22px 0 8px; color: #065f46; }
+        #relatorio-dia-corpo table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        #relatorio-dia-corpo th { text-align: left; background: #f3f4f6; padding: 6px 8px; font-size: 11px; text-transform: uppercase; color: #4b5563; }
+        #relatorio-dia-corpo td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
+        #relatorio-dia-corpo .num { text-align: right; white-space: nowrap; }
+        #relatorio-dia-corpo .rel-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 16px; }
+        #relatorio-dia-corpo .rel-resumo div { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 12px; }
+        #relatorio-dia-corpo .rel-resumo small { display: block; font-size: 10px; text-transform: uppercase; color: #4b5563; font-weight: 700; }
+        #relatorio-dia-corpo .rel-resumo b { font-size: 18px; }
+        #relatorio-dia-corpo .rel-aviso { margin-top: 12px; padding: 8px 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; font-size: 12px; color: #92400e; }
+        @media print {
+            body * { visibility: hidden !important; }
+            #relatorio-dia-corpo, #relatorio-dia-corpo * { visibility: visible !important; }
+            #relatorio-dia-corpo { position: absolute; left: 0; top: 0; width: 100%; border: 0; border-radius: 0; padding: 0; }
+            html.dark body { background: #fff; }
+        }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
     </style>
 </head>
@@ -621,7 +640,27 @@
                                 <i class="fa-solid fa-list-check"></i> Extrato de Caixa
                             </button>
                         </li>
+                        <li>
+                            <button onclick="switchFinanceSubTab('dia')" id="fin-tab-dia" class="inline-flex items-center gap-2 p-3 border-b-2 font-bold transition-all border-transparent hover:text-slate-600">
+                                <i class="fa-solid fa-file-lines"></i> Fechamento do dia
+                            </button>
+                        </li>
                     </ul>
+                </div>
+
+                <!-- 4.0 SUBTAB: FECHAMENTO DO DIA -->
+                <div id="finance-dia-view" class="hidden space-y-4">
+                    <div class="card p-4 flex flex-col sm:flex-row sm:items-end gap-3 justify-between">
+                        <div>
+                            <label for="rel-dia-data" class="block text-xs font-bold text-slate-500 mb-1">Dia do relatório</label>
+                            <input type="date" id="rel-dia-data" onchange="renderRelatorioDia()" class="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-samauma-500 focus:outline-none">
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="imprimirRelatorioDia()" class="bg-samauma-700 hover:bg-samauma-800 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-print"></i> Imprimir / salvar PDF</button>
+                            <button onclick="exportRelatorioDiaCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i> Baixar planilha</button>
+                        </div>
+                    </div>
+                    <div id="relatorio-dia-corpo"></div>
                 </div>
 
                 <!-- 4.1 SUBTAB: CONTAS A PAGAR -->
@@ -2641,27 +2680,125 @@
         // --- FINANCEIRO VIEW RENDERER ---
         function switchFinanceSubTab(subTab) {
             activeFinanceSubTab = subTab;
-            
-            // Tab Header Styling
-            document.getElementById('fin-tab-contas').className = `inline-flex items-center gap-2 p-3 border-b-2 font-bold transition-all ${subTab === 'contas' ? 'text-samauma-800 border-samauma-700' : 'border-transparent text-slate-500 hover:text-slate-600'}`;
-            document.getElementById('fin-tab-extrato').className = `inline-flex items-center gap-2 p-3 border-b-2 font-bold transition-all ${subTab === 'extrato' ? 'text-samauma-800 border-samauma-700' : 'border-transparent text-slate-500 hover:text-slate-600'}`;
 
-            if (subTab === 'contas') {
-                document.getElementById('finance-contas-view').classList.remove('hidden');
-                document.getElementById('finance-extrato-view').classList.add('hidden');
-            } else {
-                document.getElementById('finance-contas-view').classList.add('hidden');
-                document.getElementById('finance-extrato-view').classList.remove('hidden');
-            }
+            // Cabeçalho das abas e áreas visíveis
+            ['contas', 'extrato', 'dia'].forEach(nome => {
+                document.getElementById(`fin-tab-${nome}`).className = `inline-flex items-center gap-2 p-3 border-b-2 font-bold transition-all ${subTab === nome ? 'text-samauma-800 border-samauma-700' : 'border-transparent text-slate-500 hover:text-slate-600'}`;
+                document.getElementById(`finance-${nome}-view`).classList.toggle('hidden', subTab !== nome);
+            });
             renderFinanceiro();
         }
 
         function renderFinanceiro() {
             if (activeFinanceSubTab === 'contas') {
                 renderContasAPagar();
+            } else if (activeFinanceSubTab === 'dia') {
+                renderRelatorioDia();
             } else {
                 renderExtratoCaixa();
             }
+        }
+
+        // --- FECHAMENTO DO DIA: tudo o que foi vendido no dia escolhido ---
+        function esc(texto) {
+            return String(texto ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function dadosRelatorioDia() {
+            const entrada = document.getElementById('rel-dia-data');
+            if (!entrada.value) entrada.value = new Date().toLocaleDateString('sv-SE');
+            const dia = entrada.value;
+            const doDia = iso => !!iso && new Date(iso).toLocaleDateString('sv-SE') === dia;
+
+            const vendas = SamaumaStore.get('sales', []);
+            const produtos = SamaumaStore.get('products', []);
+            const transacoes = SamaumaStore.get('transactions', []);
+
+            const fechadas = vendas.filter(v => v.status === 'closed' && doDia(v.date)).sort((a, b) => new Date(a.date) - new Date(b.date));
+            const abertas = vendas.filter(v => v.status === 'open');
+            const porPagamento = {}, porItem = {}, porCategoria = {};
+            fechadas.forEach(v => {
+                const forma = v.paymentMethod || 'Não informado';
+                porPagamento[forma] = porPagamento[forma] || { qtd: 0, valor: 0 };
+                porPagamento[forma].qtd += 1;
+                porPagamento[forma].valor += v.totalAmount;
+                v.items.forEach(i => {
+                    const sub = i.sellPrice * i.quantity;
+                    const it = porItem[i.name] = porItem[i.name] || { qtd: 0, valor: 0 };
+                    it.qtd += i.quantity; it.valor += sub;
+                    const prod = produtos.find(p => p.id === i.productId);
+                    const cat = prod ? prod.category : 'Sem categoria';
+                    const c = porCategoria[cat] = porCategoria[cat] || { qtd: 0, valor: 0 };
+                    c.qtd += i.quantity; c.valor += sub;
+                });
+            });
+            const total = fechadas.reduce((t, v) => t + v.totalAmount, 0);
+            const descontos = fechadas.reduce((t, v) => t + (v.discount || 0), 0);
+            const saidas = transacoes.filter(t => t.type !== 'entrada' && doDia(t.date)).reduce((t, x) => t + x.amount, 0);
+            return { dia, fechadas, abertas, porPagamento, porItem, porCategoria, total, descontos, saidas,
+                     ticket: fechadas.length ? total / fechadas.length : 0 };
+        }
+
+        function renderRelatorioDia() {
+            const r = dadosRelatorioDia();
+            const linhasOrdenadas = obj => Object.entries(obj).sort((a, b) => b[1].valor - a[1].valor);
+            const tabela = (cab, linhas) => linhas.length
+                ? `<table><thead><tr>${cab.map(c => `<th class="${['Valor', 'Itens', 'Quantidade', 'Vendas'].includes(c) ? 'num' : ''}">${c}</th>`).join('')}</tr></thead><tbody>${linhas.join('')}</tbody></table>`
+                : '<p style="font-size:12px;color:#6b7280">Nenhuma venda neste dia.</p>';
+            const resumo = (rotulo, valor) => `<div><small>${rotulo}</small><b>${valor}</b></div>`;
+            const quem = (AuthSystem.current && AuthSystem.current.name) || '';
+
+            const html = `
+                <h2>Balneário Sumaúma — Fechamento do dia ${formatDateBR(r.dia)}</h2>
+                <div style="font-size:11px;color:#6b7280;margin-top:2px">Emitido em ${formatDateTime(new Date().toISOString())}${quem ? ' por ' + esc(quem) : ''}</div>
+                <div class="rel-resumo">
+                    ${resumo('Total vendido', formatCurrency(r.total))}
+                    ${resumo('Vendas fechadas', r.fechadas.length)}
+                    ${resumo('Ticket médio', formatCurrency(r.ticket))}
+                    ${resumo('Descontos dados', formatCurrency(r.descontos))}
+                    ${resumo('Saídas do dia', formatCurrency(r.saidas))}
+                    ${resumo('Saldo do dia', formatCurrency(r.total - r.saidas))}
+                </div>
+                ${r.abertas.length ? `<div class="rel-aviso">Atenção: ${r.abertas.length} comanda(s) ainda aberta(s), no valor de ${formatCurrency(r.abertas.reduce((t, v) => t + v.totalAmount, 0))}. Elas só entram no relatório depois de fechadas.</div>` : ''}
+
+                <h3>Por forma de pagamento</h3>
+                ${tabela(['Forma', 'Vendas', 'Valor'], linhasOrdenadas(r.porPagamento).map(([nome, d]) => `<tr><td>${esc(nome)}</td><td class="num">${d.qtd}</td><td class="num">${formatCurrency(d.valor)}</td></tr>`))}
+
+                <h3>Por categoria</h3>
+                ${tabela(['Categoria', 'Itens', 'Valor'], linhasOrdenadas(r.porCategoria).map(([nome, d]) => `<tr><td>${esc(nome)}</td><td class="num">${d.qtd}</td><td class="num">${formatCurrency(d.valor)}</td></tr>`))}
+
+                <h3>Itens vendidos</h3>
+                ${tabela(['Item', 'Quantidade', 'Valor'], Object.entries(r.porItem).sort((a, b) => b[1].qtd - a[1].qtd).map(([nome, d]) => `<tr><td>${esc(nome)}</td><td class="num">${d.qtd}</td><td class="num">${formatCurrency(d.valor)}</td></tr>`))}
+
+                <h3>Vendas do dia</h3>
+                ${tabela(['Hora', 'Cliente / mesa', 'Pagamento', 'Itens', 'Valor'], r.fechadas.map(v => `<tr><td>${formatTime(v.date)}</td><td>${esc(v.customerName)}</td><td>${esc(v.paymentMethod || '-')}</td><td class="num">${v.items.reduce((t, i) => t + i.quantity, 0)}</td><td class="num">${formatCurrency(v.totalAmount)}</td></tr>`))}
+            `;
+            document.getElementById('relatorio-dia-corpo').innerHTML = html;
+        }
+
+        function imprimirRelatorioDia() {
+            renderRelatorioDia();
+            window.print();
+        }
+
+        function exportRelatorioDiaCSV() {
+            const r = dadosRelatorioDia();
+            const num = v => String(v).replace('.', ',');
+            let csv = 'data:text/csv;charset=utf-8,\uFEFF';
+            csv += 'Data;Hora;Cliente/Mesa;Pagamento;Item;Quantidade;Valor unitario;Subtotal;Desconto da venda\n';
+            r.fechadas.forEach(v => {
+                v.items.forEach((i, idx) => {
+                    csv += `"${formatDateBR(r.dia)}";"${formatTime(v.date)}";"${String(v.customerName).replace(/"/g, '""')}";"${v.paymentMethod || ''}";"${String(i.name).replace(/"/g, '""')}";${i.quantity};${num(i.sellPrice)};${num((i.sellPrice * i.quantity).toFixed(2))};${idx === 0 ? num(v.discount || 0) : 0}\n`;
+                });
+            });
+            csv += `\n"TOTAL VENDIDO";;;;;;;${num(r.total.toFixed(2))};\n`;
+            const a = document.createElement('a');
+            a.setAttribute('href', encodeURI(csv));
+            a.setAttribute('download', `fechamento_${r.dia}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('Planilha do dia gerada!', 'success');
         }
 
         function renderContasAPagar() {
