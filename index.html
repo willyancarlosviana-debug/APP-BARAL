@@ -47,6 +47,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase (login e banco de dados) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -91,13 +93,9 @@
         <div id="login-pass-wrap" class="hidden space-y-2.5">
           <p id="login-hint" class="text-xs text-slate-500"></p>
           <input type="password" id="login-pass" autocomplete="current-password" placeholder="Senha" class="w-full px-3 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-samauma-500 focus:outline-none">
-          <input type="password" id="login-pass2" autocomplete="new-password" placeholder="Repita a senha" class="hidden w-full px-3 py-3 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-samauma-500 focus:outline-none">
         </div>
-        <label class="flex items-center gap-2 text-xs text-slate-500">
-          <input type="checkbox" id="login-remember" checked class="rounded"> Manter conectado neste aparelho
-        </label>
         <p id="login-error" class="hidden text-xs font-semibold text-red-600" role="alert"></p>
-        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">Entrar</button>
+        <button type="submit" id="login-btn" class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">Entrar</button>
       </form>
     </div>
   </div>
@@ -1155,20 +1153,126 @@
         // 1. STATE & STORE (SamaumaStore)
         // ==========================================
         class SamaumaStore {
+            // Tabelas do Supabase que espelham as listas guardadas no navegador
+            static TABELAS = { products: 'produtos', sales: 'vendas', expenses: 'despesas', transactions: 'transacoes' };
+            static remoto = null;          // cliente do Supabase (só existe com login ativo)
+            static fila = Promise.resolve(); // envia as alterações uma de cada vez, em ordem
+            static canal = null;
+            static avisouErro = false;
+
             static get(key, defaultValue = []) {
                 const data = localStorage.getItem(`samauma_${key}`);
                 return data ? JSON.parse(data) : defaultValue;
             }
 
             static set(key, value) {
+                const antes = this.get(key, []);
                 localStorage.setItem(`samauma_${key}`, JSON.stringify(value));
+                if (this.remoto && this.TABELAS[key] && Array.isArray(value)) this.enviar(key, antes, value);
             }
 
+            // Compara a lista antiga com a nova e manda só o que mudou para o banco
+            static enviar(key, antes, depois) {
+                const tabela = this.TABELAS[key];
+                const jsonAntes = new Map(antes.map(i => [i.id, JSON.stringify(i)]));
+                const idsDepois = new Set(depois.map(i => i.id));
+                const novos = [], alterados = [];
+                depois.forEach(i => {
+                    const velho = jsonAntes.get(i.id);
+                    if (velho === undefined) novos.push({ id: i.id, data: i });
+                    else if (velho !== JSON.stringify(i)) alterados.push({ id: i.id, data: i });
+                });
+                const removidos = antes.filter(i => !idsDepois.has(i.id)).map(i => i.id);
+                if (!novos.length && !alterados.length && !removidos.length) return;
+
+                this.fila = this.fila.then(async () => {
+                    try {
+                        for (let i = 0; i < novos.length; i += 200) {
+                            const { error } = await this.remoto.from(tabela).insert(novos.slice(i, i + 200));
+                            if (error && error.code !== '23505') throw error;
+                        }
+                        for (const a of alterados) {
+                            const { error } = await this.remoto.from(tabela).update({ data: a.data }).eq('id', a.id);
+                            if (error) throw error;
+                        }
+                        if (removidos.length) {
+                            const { error } = await this.remoto.from(tabela).delete().in('id', removidos);
+                            if (error) throw error;
+                        }
+                    } catch (e) {
+                        console.warn('Falha ao sincronizar', tabela, e);
+                        if (!this.avisouErro) {
+                            this.avisouErro = true;
+                            showToast('Não foi possível salvar no servidor. Verifique a internet e tente de novo.', 'error');
+                            setTimeout(() => { this.avisouErro = false; }, 15000);
+                        }
+                    }
+                });
+            }
+
+            // Baixa tudo do banco para o navegador (ao entrar)
+            static async puxarTudo() {
+                for (const [key, tabela] of Object.entries(this.TABELAS)) {
+                    let linhas = [], de = 0;
+                    for (;;) {
+                        const { data, error } = await this.remoto.from(tabela).select('id,data').order('id').range(de, de + 999);
+                        if (error) throw error;
+                        linhas = linhas.concat(data);
+                        if (data.length < 1000) break;
+                        de += 1000;
+                    }
+                    localStorage.setItem(`samauma_${key}`, JSON.stringify(linhas.map(l => l.data)));
+                }
+            }
+
+            // Recebe alterações feitas em outros aparelhos, em tempo real
+            static ouvir() {
+                this.parar();
+                this.canal = this.remoto.channel('sumauma-sync');
+                Object.entries(this.TABELAS).forEach(([key, tabela]) => {
+                    this.canal.on('postgres_changes', { event: '*', schema: 'public', table: tabela }, p => this.aoReceber(key, p));
+                });
+                this.canal.subscribe();
+            }
+
+            static aoReceber(key, p) {
+                let lista = this.get(key, []);
+                if (p.eventType === 'DELETE') {
+                    const id = p.old && p.old.id;
+                    if (!lista.some(i => i.id === id)) return;
+                    lista = lista.filter(i => i.id !== id);
+                } else {
+                    const item = p.new && p.new.data;
+                    if (!item) return;
+                    const idx = lista.findIndex(i => i.id === item.id);
+                    if (idx >= 0) {
+                        if (JSON.stringify(lista[idx]) === JSON.stringify(item)) return;
+                        lista[idx] = item;
+                    } else {
+                        lista.push(item);
+                    }
+                }
+                localStorage.setItem(`samauma_${key}`, JSON.stringify(lista));
+                atualizarTelaAtual();
+            }
+
+            static parar() {
+                if (this.canal && this.remoto) this.remoto.removeChannel(this.canal);
+                this.canal = null;
+            }
+
+            // Limpa só o cache deste aparelho (ao sair, para o próximo usuário não ver dados do anterior)
+            static limparLocal() {
+                Object.keys(this.TABELAS).forEach(k => localStorage.removeItem(`samauma_${k}`));
+            }
+
+            // "Apagar tudo": apaga no banco também, senão os dados voltariam no próximo login
             static clearAll() {
-                localStorage.removeItem('samauma_products');
-                localStorage.removeItem('samauma_sales');
-                localStorage.removeItem('samauma_expenses');
-                localStorage.removeItem('samauma_transactions');
+                const antes = Object.keys(this.TABELAS).map(k => [k, this.get(k, [])]);
+                this.limparLocal();
+                if (this.remoto) {
+                    antes.forEach(([k, lista]) => { if (lista.length) this.enviar(k, lista, []); });
+                }
             }
 
             // Carrega dados de exemplo para demonstração rápida do sistema
@@ -1675,11 +1779,6 @@
 
         class SamaumaController {
             static init() {
-                // Se o banco estiver vazio, carrega dados demo para facilitar a visualização inicial
-                if (SamaumaStore.get('products', []).length === 0) {
-                    SamaumaStore.loadDemoData();
-                }
-                
                 document.getElementById('header-date').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 
                 // Mostra o login (ou entra direto se já houver sessão)
@@ -1766,6 +1865,22 @@
         let posMenuVariantSelection = {};
         let chartCashflowInstance = null;
         let chartTopProductsInstance = null;
+
+        let _timerAtualizacao = null;
+        function atualizarTelaAtual() {
+            clearTimeout(_timerAtualizacao);
+            _timerAtualizacao = setTimeout(() => {
+                const aberta = document.querySelector('.tab-content:not(.hidden)');
+                if (!aberta) return;
+                const aba = aberta.id.replace('tab-', '');
+                if (aba === 'dashboard') renderDashboard();
+                else if (aba === 'vendas') {
+                    if (currentActiveSaleId && !document.getElementById('vendas-pos-view').classList.contains('hidden')) renderPOSActiveOrder();
+                    else renderVendas();
+                } else if (aba === 'estoque') renderEstoque();
+                else if (aba === 'financeiro') renderFinanceiro();
+            }, 300);
+        }
 
         function switchTab(tabId) {
             if (!AuthSystem.can(tabId)) return;
@@ -2981,18 +3096,19 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// --- LOGIN E PERFIS ---
-// Atenção: esta é uma proteção provisória, guardada só neste aparelho (a senha é criada no 1º acesso).
-// A segurança real virá com o servidor (Supabase).
+// --- LOGIN E PERFIS (Supabase) ---
+// A senha é conferida no servidor. O perfil (admin, gestor ou vendas) vem da tabela "perfis".
+const SUPABASE_URL = 'https://udmnwejvcdbeguuobbli.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_QZbpWpm-eKyWBdqzEzDi3g_ZO_mob6P'; // chave pública; a segurança está nas regras (RLS) do banco
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const AuthSystem = {
     users: [
-        { id: 'willyan', name: 'Willyan', role: 'admin' },
-        { id: 'baral', name: 'Baral', role: 'gestor', inicial: true },
-        { id: 'mae', name: 'Mãe', role: 'vendas', inicial: true },
-        { id: 'rihanna', name: 'Rihanna', role: 'vendas', inicial: true }
+        { id: 'willyan', name: 'Willyan', email: 'willyan@sumauma.app' },
+        { id: 'baral', name: 'Baral', email: 'baral@sumauma.app' },
+        { id: 'mae', name: 'Mãe', email: 'mae@sumauma.app' },
+        { id: 'rihanna', name: 'Rihanna', email: 'rihanna@sumauma.app' }
     ],
-    // Senha inicial provisória (usuários com inicial: true entram com ela; o Willyan define a própria no 1º acesso)
-    SENHA_INICIAL: '123456',
     roleLabels: { admin: 'Administrador', gestor: 'Gestor', vendas: 'Vendas e estoque' },
     // Willyan vê tudo; Baral vê tudo menos Configurações; Mãe e Rihanna só Vendas e Estoque (estoque só para consulta)
     access: {
@@ -3006,25 +3122,22 @@ const AuthSystem = {
     can(tab) {
         return !!this.current && this.access[this.current.role].includes(tab);
     },
-    hashes() {
-        try { return JSON.parse(localStorage.getItem('samauma_auth') || '{}'); } catch (e) { return {}; }
+    async start() {
+        try {
+            const { data } = await sb.auth.getSession();
+            if (data.session) {
+                const user = await this.carregarPerfil(data.session.user);
+                if (user) { await this.enter(user); return; }
+            }
+        } catch (e) { console.warn('Sem sessão salva:', e); }
+        this.showLogin();
     },
-    async digest(id, pass) {
-        const text = 'samauma:' + id + ':' + pass;
-        if (window.crypto && crypto.subtle) {
-            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-        let h = 5381;
-        for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
-        return 'x' + h;
-    },
-    savedSession() {
-        try { return localStorage.getItem('samauma_session') || sessionStorage.getItem('samauma_session'); } catch (e) { return null; }
-    },
-    start() {
-        const user = this.users.find(u => u.id === this.savedSession());
-        if (user) this.enter(user); else this.showLogin();
+    // Descobre quem é a pessoa e qual o perfil dela no banco
+    async carregarPerfil(authUser) {
+        const local = this.users.find(u => u.email === authUser.email);
+        const { data, error } = await sb.from('perfis').select('papel').eq('id', authUser.id).maybeSingle();
+        if (error || !data || !local || !this.access[data.papel]) return null;
+        return { ...local, role: data.papel };
     },
     showLogin() {
         this.current = null;
@@ -3035,31 +3148,29 @@ const AuthSystem = {
         document.getElementById('login-pass-wrap').classList.add('hidden');
         document.getElementById('login-error').classList.add('hidden');
         document.getElementById('login-pass').value = '';
-        document.getElementById('login-pass2').value = '';
+        this.setCarregando(false);
         this.renderUsers();
+    },
+    setCarregando(sim) {
+        const b = document.getElementById('login-btn');
+        b.disabled = sim;
+        b.innerText = sim ? 'Entrando…' : 'Entrar';
     },
     renderUsers() {
         document.getElementById('login-users').innerHTML = this.users.map(u => {
             const active = u.id === this.selected;
             return `<button type="button" onclick="AuthSystem.selectUser('${u.id}')" class="flex items-center gap-3 px-3 py-3 rounded-xl border text-left transition-all ${active ? 'bg-samauma-950 border-samauma-950 text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-samauma-400'}">
                 <span class="h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm ${active ? 'bg-samauma-accent text-samauma-950' : 'bg-samauma-100 text-samauma-800'}">${u.name.charAt(0)}</span>
-                <span><span class="block text-sm font-bold">${u.name}</span><span class="block text-[11px] ${active ? 'text-samauma-300' : 'text-slate-400'}">${this.roleLabels[u.role]}</span></span>
+                <span class="block text-sm font-bold">${u.name}</span>
             </button>`;
         }).join('');
     },
     selectUser(id) {
         this.selected = id;
-        const usuario = this.users.find(u => u.id === id);
-        const first = !this.hashes()[id] && !usuario.inicial;
         document.getElementById('login-pass-wrap').classList.remove('hidden');
-        document.getElementById('login-pass2').classList.toggle('hidden', !first);
-        document.getElementById('login-pass').autocomplete = first ? 'new-password' : 'current-password';
-        document.getElementById('login-hint').innerText = first
-            ? 'Primeiro acesso neste aparelho: crie sua senha (mínimo de 6 caracteres).'
-            : 'Digite sua senha.';
+        document.getElementById('login-hint').innerText = 'Digite sua senha.';
         document.getElementById('login-error').classList.add('hidden');
         document.getElementById('login-pass').value = '';
-        document.getElementById('login-pass2').value = '';
         this.renderUsers();
         document.getElementById('login-pass').focus();
     },
@@ -3067,34 +3178,44 @@ const AuthSystem = {
         const el = document.getElementById('login-error');
         el.innerText = msg;
         el.classList.remove('hidden');
+        this.setCarregando(false);
     },
     async submit(e) {
         e.preventDefault();
         document.getElementById('login-error').classList.add('hidden');
-        const user = this.users.find(u => u.id === this.selected);
-        if (!user) return this.fail('Escolha o seu nome.');
+        const local = this.users.find(u => u.id === this.selected);
+        if (!local) return this.fail('Escolha o seu nome.');
         const pass = document.getElementById('login-pass').value;
-        const stored = this.hashes()[user.id];
-        if (!stored && user.inicial) {
-            if (pass !== this.SENHA_INICIAL) return this.fail('Senha incorreta.');
-        } else if (!stored) {
-            if (pass.length < 6) return this.fail('A senha precisa ter pelo menos 6 caracteres.');
-            if (pass !== document.getElementById('login-pass2').value) return this.fail('As senhas não são iguais.');
-            const all = this.hashes();
-            all[user.id] = await this.digest(user.id, pass);
-            localStorage.setItem('samauma_auth', JSON.stringify(all));
-        } else if (stored !== await this.digest(user.id, pass)) {
-            return this.fail('Senha incorreta.');
-        }
-        const remember = document.getElementById('login-remember').checked;
+        if (!pass) return this.fail('Digite a senha.');
+        this.setCarregando(true);
         try {
-            localStorage.removeItem('samauma_session');
-            sessionStorage.removeItem('samauma_session');
-            (remember ? localStorage : sessionStorage).setItem('samauma_session', user.id);
-        } catch (err) { /* sem armazenamento: a sessão vale só até recarregar */ }
-        this.enter(user);
+            const { data, error } = await sb.auth.signInWithPassword({ email: local.email, password: pass });
+            if (error) {
+                const semRede = /fetch|network/i.test(error.message || '');
+                return this.fail(semRede ? 'Sem conexão com a internet. Tente de novo.' : 'Senha incorreta.');
+            }
+            const user = await this.carregarPerfil(data.user);
+            if (!user) {
+                await sb.auth.signOut();
+                return this.fail('Seu usuário ainda não tem perfil de acesso. Fale com o administrador.');
+            }
+            await this.enter(user);
+        } catch (err) {
+            console.warn(err);
+            this.fail('Não foi possível entrar agora. Tente de novo.');
+        }
     },
-    enter(user) {
+    async enter(user) {
+        // Baixa os dados do servidor e passa a ouvir as mudanças dos outros aparelhos
+        SamaumaStore.remoto = sb;
+        SamaumaStore.limparLocal();
+        await SamaumaStore.puxarTudo();
+        // Primeiro acesso de um gestor: cadastra o cardápio padrão no banco
+        if (user.role !== 'vendas' && SamaumaStore.get('products', []).length === 0) {
+            SamaumaStore.loadDemoData();
+        }
+        SamaumaStore.ouvir();
+
         this.current = user;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app-content').style.display = '';
@@ -3107,11 +3228,11 @@ const AuthSystem = {
         document.body.dataset.role = user.role;
         switchTab(user.role === 'vendas' ? 'vendas' : 'dashboard');
     },
-    logout() {
-        try {
-            localStorage.removeItem('samauma_session');
-            sessionStorage.removeItem('samauma_session');
-        } catch (err) { /* ignora */ }
+    async logout() {
+        SamaumaStore.parar();
+        SamaumaStore.remoto = null;
+        SamaumaStore.limparLocal();
+        try { await sb.auth.signOut(); } catch (err) { /* sem rede: a sessão local é apagada mesmo assim */ }
         this.showLogin();
     }
 };
